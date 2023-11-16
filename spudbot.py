@@ -30,11 +30,14 @@ async def fetch_api_data():
 
             # Extract and round the price
             price = round(data['price'], 2)  # Rounds the price to two decimal places
+            # Extract circulatingSupply and divide by 1 billion
+            circulating_supply = data['circulatingSupply'] / 1_000_000_000  # Divides by 1 billion
 
             if TEST_MODE:
                 # Display all variables
                 print(json.dumps(data, indent=4))
                 print (price)
+                print (circulating_supply)
                 # Exit if in test mode
                 await client.close()
                 return
