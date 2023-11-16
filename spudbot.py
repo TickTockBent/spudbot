@@ -43,8 +43,8 @@ async def fetch_api_data():
                 print ("Raw API output: ")
                 print(json.dumps(data, indent=4))
                 print ("Parsed Output: ")
-                print ("Price = "+price)
-                print ("Circulating Supply = "+circulating_supply)
+                print ("Price = $"+price)
+                print ("Circulating Supply = "+circulating_supply+" SMH")
                 # Exit if in test mode
                 await client.close()
                 return
