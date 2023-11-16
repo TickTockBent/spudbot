@@ -70,12 +70,12 @@ async def fetch_api_data():
 
             # Create a message string (only if not in test mode)
             message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
-            await client.get_channel(price_channel_id).edit(name=f"Price: {price}")
-            await client.get_channel(circulating_supply_channel_id).edit(name=f"Circulating Supply: {circulating_supply}")
-            await client.get_channel(market_cap_channel_id).edit(name=f"Market Cap: {market_cap}")
+            await client.get_channel(price_channel_id).edit(name=f"Price: ${price}")
+            await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply}SMH")
+            await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
             await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
             await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
-            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}")
+            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}GB")
             await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
 
         else:
