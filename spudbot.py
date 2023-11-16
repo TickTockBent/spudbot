@@ -41,7 +41,7 @@ async def fetch_api_data():
             circulating_supply = round(data['circulatingSupply'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
             market_cap = round(data['marketCap'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
             # Extract effectiveUnitsCommited and multiply by 64
-            effective_units_commited = data['effectiveUnitsCommited'] * 64
+            effective_units_commited = data['effectiveUnitsCommited'] * 64 / 1000
             curr_epoch = data['epoch']
             curr_layer = data['layer']
             active_smeshers = data['totalActiveSmeshers']
@@ -75,7 +75,7 @@ async def fetch_api_data():
             await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
             await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
             await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
-            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}GB")
+            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}PB")
             await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
 
         else:
