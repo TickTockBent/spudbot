@@ -34,10 +34,17 @@ async def fetch_api_data():
             circulating_supply = round(data['circulatingSupply'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
 
             if TEST_MODE:
-                # Display all variables
+                # Display test mode output variables
+                print ("***********************")
+                print ("**SPUDBOT 9000 ONLINE**")
+                print ("***********************")
+                print ("***Test Mode Enabled***")
+                print ("***********************")
+                print ("Raw API output: ")
                 print(json.dumps(data, indent=4))
-                print (price)
-                print (circulating_supply)
+                print ("Parsed Output: ")
+                print ("Price = "+price)
+                print ("Circulating Supply = "+circulating_supply)
                 # Exit if in test mode
                 await client.close()
                 return
