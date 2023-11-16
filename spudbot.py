@@ -2,6 +2,7 @@ import discord
 import requests
 import configparser
 import json
+import asyncio
 from discord import Intents
 
 # Read configuration file
