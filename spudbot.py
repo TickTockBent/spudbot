@@ -31,10 +31,10 @@ async def fetch_api_data():
             # Extract and round the price
             price = round(data['price'], 2)  # Rounds the price to two decimal places
 
-            # Display all variables
-            print(json.dumps(data, indent=4))
-
             if TEST_MODE:
+                # Display all variables
+                print(json.dumps(data, indent=4))
+                print (price)
                 # Exit if in test mode
                 await client.close()
                 return
