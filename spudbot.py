@@ -2,6 +2,7 @@ import discord
 import requests
 import configparser
 import json
+from discord import Intents
 
 # Read configuration file
 config = configparser.ConfigParser()
@@ -12,8 +13,13 @@ API_ENDPOINT = config['DEFAULT']['APIEndpoint']
 WAIT_TIME = int(config['DEFAULT']['WaitTime'])
 TEST_MODE = config.getboolean('DEFAULT', 'TestMode')
 
-# Discord client
-client = discord.Client()
+# Define intents
+intents = Intents.default()
+intents.messages = True
+intents.guilds = True
+
+# Discord client with intents
+client = discord.Client(intents=intents)
 
 async def fetch_api_data():
     try:
