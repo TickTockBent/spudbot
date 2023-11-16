@@ -8,10 +8,16 @@ from discord import Intents
 config = configparser.ConfigParser()
 config.read('config.ini')
 TOKEN = config['DEFAULT']['Token']
-CHANNEL_NAME = config['DEFAULT']['ChannelName']
 API_ENDPOINT = config['DEFAULT']['APIEndpoint']
 WAIT_TIME = int(config['DEFAULT']['WaitTime'])
 TEST_MODE = config.getboolean('DEFAULT', 'TestMode')
+price_channel_id = int(config['CHANNELS']['PriceChannelID'])
+circulating_supply_channel_id = int(config['CHANNELS']['CirculatingSupplyChannelID'])
+market_cap_channel_id = int(config['CHANNELS']['MarketCapChannelID'])
+epoch_channel_id = int(config['CHANNELS']['EpochChannelID'])
+layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
+network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
+active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 
 # Define intents
 intents = Intents.default()
@@ -63,11 +69,13 @@ async def fetch_api_data():
 
             # Create a message string (only if not in test mode)
             message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
-
-            # Find a specific channel to send the message to
-            for channel in client.get_all_channels():
-                if channel.name == CHANNEL_NAME:
-                    await channel.send(message)
+            await client.get_channel(price_channel_id).edit(name=f"Price: {price}")
+            await client.get_channel(circulating_supply_channel_id).edit(name=f"Circulating Supply: {circulating_supply}")
+            await client.get_channel(market_cap_channel_id).edit(name=f"Market Cap: {market_cap}")
+            await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
+            await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
+            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}")
+            await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
 
         else:
             print("Failed to fetch API data.")
