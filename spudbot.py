@@ -56,7 +56,7 @@ async def fetch_api_data():
                 print ("Current Epoch: " + curr_epoch)
                 print ("Current Layer: " + curr_layer)
                 print ("Total Network Size: " + str(effective_units_commited) + "GB")
-                print ("Active Smeshers: " + active_smeshers)
+                print ("Active Smeshers: " + str(active_smeshers))
                 # Exit if in test mode
                 await client.close()
                 return
