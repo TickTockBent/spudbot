@@ -53,8 +53,8 @@ async def fetch_api_data():
                 print ("Circulating Supply = " + str(circulating_supply) + " SMH")
                 print ("Market Cap = $" + str(market_cap))
                 print ("Nerd Stats:")
-                print ("Current Epoch: " + curr_epoch)
-                print ("Current Layer: " + curr_layer)
+                print ("Current Epoch: " + str(curr_epoch))
+                print ("Current Layer: " + str(curr_layer))
                 print ("Total Network Size: " + str(effective_units_commited) + "GB")
                 print ("Active Smeshers: " + str(active_smeshers))
                 # Exit if in test mode
