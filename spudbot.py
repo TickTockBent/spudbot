@@ -41,7 +41,7 @@ async def fetch_api_data():
             circulating_supply = "{:,}".format(round(data['circulatingSupply'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
             market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
             # Extract effectiveUnitsCommited and multiply by 64
-            effective_units_commited = "{:,}".format(data['effectiveUnitsCommited'] * 64 / 1000)
+            effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1000))
             curr_epoch = data['epoch']
             curr_layer = "{:,}".format(data['layer'])
             active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
