@@ -28,6 +28,9 @@ async def fetch_api_data():
         if response.status_code == 200:
             data = response.json()
 
+            # Extract and round the price
+            price = round(data['price'], 2)  # Rounds the price to two decimal places
+
             # Display all variables
             print(json.dumps(data, indent=4))
 
