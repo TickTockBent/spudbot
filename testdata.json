@@ -1,0 +1,20 @@
+{
+    "epoch": 8,
+    "layer": 36132,
+    "effectiveUnitsCommited": 1049013,
+    "epochSubsidy": 1915073415065970,
+    "totalSlots": 201600,
+    "totalWeight": 9751939071,
+    "circulatingSupply": 13274349749784009,
+    "price": 2.9061441923843105,
+    "marketCap": 38577174.433012920,
+    "totalAccounts": 8700,
+    "totalActiveSmeshers": 44760,
+    "atxHex": "00025bfa7dd97768453675a2c092162126a39de0b00d3c22b00dc9a74ac08f93",
+    "atxBase64": "AAJb+n3Zd2hFNnWiwJIWISajneCwDTwisA3Jp0rAj5M=",
+    "nextEpoch": {
+        "epoch": 9,
+        "effectiveUnitsCommited": 709472,
+        "totalActiveSmeshers": 40075
+    }
+}
