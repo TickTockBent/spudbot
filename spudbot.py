@@ -32,6 +32,7 @@ async def fetch_api_data():
             price = round(data['price'], 2)  # Rounds the price to two decimal places
             # Extract circulatingSupply and divide by 1 billion
             circulating_supply = round(data['circulatingSupply'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
+            market_cap = round(data['marketCap'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
 
             if TEST_MODE:
                 # Display test mode output variables
@@ -45,6 +46,7 @@ async def fetch_api_data():
                 print ("Parsed Output: ")
                 print ("Price = $" + str(price))
                 print ("Circulating Supply = " + str(circulating_supply) + " SMH")
+                print ("Market Cap = $" + str(market_cap))
                 # Exit if in test mode
                 await client.close()
                 return
