@@ -75,7 +75,7 @@ async def fetch_api_data():
             await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
             await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
             await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
-            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}PB")
+            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}PiB")
             await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
 
         else:
