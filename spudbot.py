@@ -33,6 +33,11 @@ async def fetch_api_data():
             # Extract circulatingSupply and divide by 1 billion
             circulating_supply = round(data['circulatingSupply'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
             market_cap = round(data['marketCap'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
+            # Extract effectiveUnitsCommited and multiply by 64
+            effective_units_commited = data['effectiveUnitsCommited'] * 64
+            curr_epoch = data['epoch']
+            curr_layer = data['layer']
+            active_smeshers = data['totalActiveSmeshers']
 
             if TEST_MODE:
                 # Display test mode output variables
@@ -43,10 +48,15 @@ async def fetch_api_data():
                 print ("***********************")
                 print ("Raw API output: ")
                 print(json.dumps(data, indent=4))
-                print ("Parsed Output: ")
+                print ("Primary Stats: ")
                 print ("Price = $" + str(price))
                 print ("Circulating Supply = " + str(circulating_supply) + " SMH")
                 print ("Market Cap = $" + str(market_cap))
+                print ("Nerd Stats:")
+                print ("Current Epoch: " + curr_epoch)
+                print ("Current Layer: " + curr_layer)
+                print ("Total Network Size: " + str(effective_units_commited) + "GB")
+                print ("Active Smeshers: " + active_smeshers)
                 # Exit if in test mode
                 await client.close()
                 return
