@@ -38,13 +38,13 @@ async def fetch_api_data():
             # Extract and round the price
             price = round(data['price'], 2)  # Rounds the price to two decimal places
             # Extract circulatingSupply and divide by 1 billion
-            circulating_supply = round(data['circulatingSupply'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
-            market_cap = round(data['marketCap'] / 1_000_000_000) #divide by 1 billion and round so we report SMH not smidge
+            circulating_supply = "{:,}".format(round(data['circulatingSupply'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
+            market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
             # Extract effectiveUnitsCommited and multiply by 64
-            effective_units_commited = data['effectiveUnitsCommited'] * 64 / 1000
+            effective_units_commited = "{:,}".format(data['effectiveUnitsCommited'] * 64 / 1000)
             curr_epoch = data['epoch']
-            curr_layer = data['layer']
-            active_smeshers = data['totalActiveSmeshers']
+            curr_layer = "{:,}".format(data['layer'])
+            active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
 
             if TEST_MODE:
                 # Display test mode output variables
@@ -71,7 +71,7 @@ async def fetch_api_data():
             # Create a message string (only if not in test mode)
             message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
             await client.get_channel(price_channel_id).edit(name=f"Price: ${price}")
-            await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply}SMH")
+            await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
             await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
             await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
             await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
