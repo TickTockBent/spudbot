@@ -3,7 +3,7 @@ import requests
 import configparser
 import json
 import asyncio
-import datetime
+from datetime import datetime
 from discord import Intents
 
 # Read configuration file
