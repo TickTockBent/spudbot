@@ -88,7 +88,7 @@ async def fetch_api_data():
 
                 # Create a message string (only if not in test mode)
                 # message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
-                print ("Updating channel names...")
+                print ("Channel updates starting at: ", formatted_time)
                 await client.get_channel(price_channel_id).edit(name=f"Price: ${price}")
                 print ("...Price updated...")
                 await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
