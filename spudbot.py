@@ -32,20 +32,36 @@ async def fetch_api_data():
     while not client.is_closed():
         try:
             # Make an API request
+            print("Spudbot fetching API data...")
             response = requests.get(API_ENDPOINT)
             if response.status_code == 200:
+                print("API fetch successful!")
                 data = response.json()
-
+                next_epoch_data = data['nextEpoch']
+                print("Calculating...")
                 # Extract and round the price
                 price = round(data['price'], 2)  # Rounds the price to two decimal places
+                print("Price found: $"+str(price))
                 # Extract circulatingSupply and divide by 1 billion
                 circulating_supply = "{:,}".format(round(data['circulatingSupply'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
+                print("Circulating supply found: "+str(circulating_supply)+" SMH")
                 market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
+                print("Market Cap found: $"+str(market_cap))
                 # Extract effectiveUnitsCommited and multiply by 64
                 effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1000))
+                print("Network size computed: "+str(effective_units_commited)+" GiB")
+                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1000))
+                print("The next epoch will have: "+str(next_epoch_units_commited)+" TiB")
                 curr_epoch = data['epoch']
+                print("Epoch: "+str(curr_epoch))
+                next_epoch = next_epoch_data['epoch']
+                print("Next Epoch: "+str(next_epoch))
                 curr_layer = "{:,}".format(data['layer'])
+                print("Current layer: "+str(curr_layer))
                 active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
+                print("Total active smeshers: "+str(active_smeshers))
+                next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
+                print("The next epoch will have "+str(next_epoch_active_smeshers)" active smeshers.")
 
                 if TEST_MODE:
                     # Display test mode output variables
@@ -70,14 +86,23 @@ async def fetch_api_data():
                     return
 
                 # Create a message string (only if not in test mode)
-                message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
+                # message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
+                print ("Updating channel names...")
                 await client.get_channel(price_channel_id).edit(name=f"Price: ${price}")
+                print ("...Price updated...")
                 await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
+                print ("...Circulating Supply updated...")
                 await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
+                print ("...Market Cap updated...")
                 await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
+                print ("...Current epoch updated...")
                 await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
+                print ("...Current layer updated...")
                 await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}TiB")
+                print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
+                print ("...Active smeshers updated...")
+                print ("...Channel updates complete!")
 
             else:
                 print("Failed to fetch API data.")
@@ -92,6 +117,11 @@ async def fetch_api_data():
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
+    print ("***********************")
+    print ("**SPUDBOT 9000 ONLINE**")
+    print ("***********************")
+    print ("***Prod Mode Enabled***")
+    print ("***********************")
     client.loop.create_task(fetch_api_data())
 
 # Run the bot
