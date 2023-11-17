@@ -103,7 +103,7 @@ async def fetch_api_data():
                 print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
                 print ("...Active smeshers updated...")
-                current_time = datetime.now
+                current_time = datetime.now()
                 formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
                 print ("...Channel updates completed at: ", formatted_time)
 
