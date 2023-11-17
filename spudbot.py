@@ -49,9 +49,9 @@ async def fetch_api_data():
                 market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
                 print("Market Cap found: $"+str(market_cap))
                 # Extract effectiveUnitsCommited and multiply by 64
-                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1000))
+                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024))
                 print("Network size computed: "+str(effective_units_commited)+" GiB")
-                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1000))
+                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024))
                 print("The next epoch will have: "+str(next_epoch_units_commited)+" TiB")
                 curr_epoch = data['epoch']
                 print("Epoch: "+str(curr_epoch))
