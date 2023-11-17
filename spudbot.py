@@ -61,7 +61,7 @@ async def fetch_api_data():
                 active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
                 print("Total active smeshers: "+str(active_smeshers))
                 next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
-                print("The next epoch will have "+str(next_epoch_active_smeshers)" active smeshers.")
+                print("The next epoch will have "+str(next_epoch_active_smeshers)+" active smeshers.")
 
                 if TEST_MODE:
                     # Display test mode output variables
