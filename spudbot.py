@@ -23,8 +23,9 @@ layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
 network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
 active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
-trading_stats_channel_id = int(config['CHANNELS'['TradingStatsCategoryID'])
-network_stats_channel_id = int(config['CHANNELS'['NetworkStatsCategoryID'])
+trading_stats_channel_id = int(config['CHANNELS']['TradingStatsCategoryID'])
+
+network_stats_channel_id = int(config['CHANNELS']['NetworkStatsCategoryID'])
 
 # Define intents
 intents = Intents.default()
