@@ -35,6 +35,7 @@ async def fetch_api_data():
     while not client.is_closed():
         try:
             price_message = "No price data available."
+            price = "No price data available."
             # Make an API request
             print("Spudbot fetching API data...")
             response = requests.get(API_ENDPOINT)
@@ -42,7 +43,8 @@ async def fetch_api_data():
                 print("API fetch successful!")
                 data = response.json()
                 print("Calculating...")
-                if data.get('price', -1) != -1:
+                price = data.get('price')
+                if price != -1:
                     # Update the last good price
                     last_good_price = round(data['price'], 2)
                     price_message = f"Price: ${last_good_price}"
