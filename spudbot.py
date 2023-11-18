@@ -135,9 +135,9 @@ async def fetch_api_data():
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    else:
-        print("Failed to fetch API data.")
-    await asyncio.sleep(WAIT_TIME)
+        else:
+            print("Failed to fetch API data.")
+        await asyncio.sleep(WAIT_TIME)
 
 
 
