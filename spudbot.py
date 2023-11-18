@@ -108,28 +108,6 @@ async def fetch_api_data():
             next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
             print("The next epoch will have "+str(next_epoch_active_smeshers)+" active smeshers.")
 
-            if TEST_MODE:
-                # Display test mode output variables
-                print ("***********************")
-                print ("**SPUDBOT 9000 ONLINE**")
-                print ("***********************")
-                print ("***Test Mode Enabled***")
-                print ("***********************")
-                print ("Raw API output: ")
-                print(json.dumps(data, indent=4))
-                print ("Primary Stats: ")
-                print ("Price = $" + str(price))
-                print ("Circulating Supply = " + str(circulating_supply) + " SMH")
-                print ("Market Cap = $" + str(market_cap))
-                print ("Nerd Stats:")
-                print ("Current Epoch: " + str(curr_epoch))
-                print ("Current Layer: " + str(curr_layer))
-                print ("Total Network Size: " + str(effective_units_commited) + "TiB")
-                print ("Active Smeshers: " + str(active_smeshers))
-                # Exit if in test mode
-                await client.close()
-                return
-
             # Create a message string (only if not in test mode)
             # message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
             current_time = datetime.now()
@@ -159,10 +137,9 @@ async def fetch_api_data():
 
     else:
         print("Failed to fetch API data.")
+    await asyncio.sleep(WAIT_TIME)
 
-        if not TEST_MODE:
-            # Wait for the specified time before making the next API call
-            await asyncio.sleep(WAIT_TIME)
+
 
 @client.event
 async def on_ready():
