@@ -102,9 +102,9 @@ async def fetch_api_data():
                 next_epoch_data = data['nextEpoch']
                 print("Percentage of total supply: %"+str(supply_percentage))
                 # Extract effectiveUnitsCommited and multiply by 64
-                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024 / 1024))
+                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024 / 1024, 2))
                 print("Network size computed: "+str(effective_units_commited)+" PiB")
-                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024 / 1024))
+                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024 / 1024, 2))
                 print("The next epoch will have: "+str(next_epoch_units_commited)+" PiB")
                 curr_epoch = data['epoch']
                 print("Epoch: "+str(curr_epoch))
