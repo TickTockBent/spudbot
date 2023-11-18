@@ -20,6 +20,7 @@ epoch_channel_id = int(config['CHANNELS']['EpochChannelID'])
 layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
 network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
 active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
+last_good_price = None
 
 # Define intents
 intents = Intents.default()
@@ -30,6 +31,7 @@ intents.guilds = True
 client = discord.Client(intents=intents)
 
 async def fetch_api_data():
+    global last_good_price
     while not client.is_closed():
         try:
             # Make an API request
@@ -38,11 +40,17 @@ async def fetch_api_data():
             if response.status_code == 200:
                 print("API fetch successful!")
                 data = response.json()
-                next_epoch_data = data['nextEpoch']
                 print("Calculating...")
-                # Extract and round the price
-                price = round(data['price'], 2)  # Rounds the price to two decimal places
-                print("Price found: $"+str(price))
+                if data.get('price', -1) != -1:
+                    # Update the last good price
+                    last_good_price = round(data['price'], 2)
+                    price_message = f"Price: ${last_good_price}"
+                    print("Price found: $"+str(price_message))
+                elif last_good_price is not None:
+                    # Use the last good price with an indication of being outdated
+                    price_message = f"Price: ${last_good_price} (outdated)"
+                    print("Price API offline. Using old price: $"+str(price_message))
+                next_epoch_data = data['nextEpoch']
                 # Extract circulatingSupply and divide by 1 billion
                 circulating_supply = "{:,}".format(round(data['circulatingSupply'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
                 print("Circulating supply found: "+str(circulating_supply)+" SMH")
@@ -50,7 +58,7 @@ async def fetch_api_data():
                 print("Market Cap found: $"+str(market_cap))
                 # Extract effectiveUnitsCommited and multiply by 64
                 effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024))
-                print("Network size computed: "+str(effective_units_commited)+" GiB")
+                print("Network size computed: "+str(effective_units_commited)+" TiB")
                 next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024))
                 print("The next epoch will have: "+str(next_epoch_units_commited)+" TiB")
                 curr_epoch = data['epoch']
@@ -80,7 +88,7 @@ async def fetch_api_data():
                     print ("Nerd Stats:")
                     print ("Current Epoch: " + str(curr_epoch))
                     print ("Current Layer: " + str(curr_layer))
-                    print ("Total Network Size: " + str(effective_units_commited) + "GB")
+                    print ("Total Network Size: " + str(effective_units_commited) + "TiB")
                     print ("Active Smeshers: " + str(active_smeshers))
                     # Exit if in test mode
                     await client.close()
@@ -91,7 +99,7 @@ async def fetch_api_data():
                 current_time = datetime.now()
                 formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
                 print ("Channel updates starting at: ", formatted_time)
-                await client.get_channel(price_channel_id).edit(name=f"Price: ${price}")
+                await client.get_channel(price_channel_id).edit(name=f"Price: ${price_message}")
                 print ("...Price updated...")
                 await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
                 print ("...Circulating Supply updated...")
@@ -101,7 +109,7 @@ async def fetch_api_data():
                 print ("...Current epoch updated...")
                 await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
                 print ("...Current layer updated...")
-                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited}TiB")
+                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited} TiB")
                 print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
                 print ("...Active smeshers updated...")
