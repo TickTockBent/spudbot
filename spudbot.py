@@ -23,8 +23,7 @@ layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
 network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
 active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
-trading_stats_channel_id = int(config['CHANNELS']['TradingStatsCategoryID'])
-network_stats_channel_id = int(config['CHANNELS']['NetworkStatsCategoryID'])
+status_category_id = int(config['CHANNELS']['StatusCategoryID'])
 percent_total_supply_channel_id = int(config['CHANNELS']['PercentTotalSupplyChannelID'])
 TOTAL_SUPPLY = 2400000000
 
@@ -155,7 +154,7 @@ async def on_ready():
     print ("Finding category...")
     # Find the category by ID
     new_category_name = "🥔 Spudbot 9000 🥔 (Online)"
-    category = discord.utils.get(client.get_all_channels(), id=trading_stats_channel_id)
+    category = discord.utils.get(client.get_all_channels(), id=status_category_id)
     print ("Checking category...")
     # Check if the category is found and is indeed a category channel
     if category and isinstance(category, discord.CategoryChannel):
@@ -170,7 +169,7 @@ async def shutdown_signal():
     new_category_name = "🥔 Spudbot 9000 🥔 (Offline)"
     print(f"Shutting down... :(")
     print(f"Category renamed to: {new_category_name}")
-    category = discord.utils.get(client.get_all_channels(), id=trading_stats_channel_id)
+    category = discord.utils.get(client.get_all_channels(), id=status_category_id)
     if category:
         await category.edit(name=new_category_name)
     await client.close()
