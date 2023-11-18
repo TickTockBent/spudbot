@@ -25,6 +25,7 @@ active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
 trading_stats_channel_id = int(config['CHANNELS']['TradingStatsCategoryID'])
 network_stats_channel_id = int(config['CHANNELS']['NetworkStatsCategoryID'])
+percent_total_supply_channel_id = int(config['CHANNELS']['PercentTotalSupplyChannelID'])
 TOTAL_SUPPLY = 2400000000
 
 # Define intents
@@ -62,7 +63,8 @@ async def fetch_api_data():
                 # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
                 circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
                 # Compute percentage of total supply dispersed
-                supply_percentage = (circulating_supply_raw / TOTAL_SUPPLY) * 100
+                # Compute the percentage of total supply and round to two decimal places
+                supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
                 # Format for display
                 circulating_supply = "{:,}".format(circulating_supply_raw)
                 print("Circulating supply found: "+str(circulating_supply)+" SMH")
@@ -126,6 +128,8 @@ async def fetch_api_data():
                 print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
                 print ("...Active smeshers updated...")
+                await client.get_channel(percent_total_supply_channel_id).edit(name=f"% Total Supply: {supply_percentage}")
+                print ("...Percent total supply updated...")
                 current_time = datetime.now()
                 formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
                 print ("...Channel updates completed at: ", formatted_time)
