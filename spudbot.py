@@ -24,8 +24,8 @@ network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
 active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
 trading_stats_channel_id = int(config['CHANNELS']['TradingStatsCategoryID'])
-
 network_stats_channel_id = int(config['CHANNELS']['NetworkStatsCategoryID'])
+TOTAL_SUPPLY = 2400000000
 
 # Define intents
 intents = Intents.default()
@@ -59,9 +59,14 @@ async def fetch_api_data():
                     price_message = f"Price: ${last_good_price} (outdated)"
                     print("Price API offline. Using old price: $"+str(price_message))
                 next_epoch_data = data['nextEpoch']
-                # Extract circulatingSupply and divide by 1 billion
-                circulating_supply = "{:,}".format(round(data['circulatingSupply'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
+                # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
+                circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
+                # Compute percentage of total supply dispersed
+                supply_percentage = (circulating_supply_raw / TOTAL_SUPPLY) * 100
+                # Format for display
+                circulating_supply = "{:,}".format(circulating_supply_raw)
                 print("Circulating supply found: "+str(circulating_supply)+" SMH")
+                print("Percentage of total supply: %"+str(supply_percentage))
                 market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
                 print("Market Cap found: $"+str(market_cap))
                 # Extract effectiveUnitsCommited and multiply by 64
