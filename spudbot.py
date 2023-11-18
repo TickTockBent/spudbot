@@ -42,6 +42,7 @@ async def fetch_api_data():
         try:
             price_message = "No price data."
             price = "No price data available."
+            trend_indicator = ""  # Initialize trend_indicator
             # Make an API request
             print("Spudbot fetching API data...")
             response = requests.get(API_ENDPOINT)
