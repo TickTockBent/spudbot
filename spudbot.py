@@ -154,7 +154,7 @@ async def on_ready():
     print ("***********************")
     print ("Finding category...")
     # Find the category by ID
-    new_category_name = "Trading Stats (Online)"
+    new_category_name = "🥔 Spudbot 9000 🥔 (Online)"
     category = discord.utils.get(client.get_all_channels(), id=trading_stats_channel_id)
     print ("Checking category...")
     # Check if the category is found and is indeed a category channel
@@ -167,7 +167,7 @@ async def on_ready():
     client.loop.create_task(fetch_api_data())
 
 async def shutdown_signal():
-    new_category_name = "Trading Stats (Offline)"
+    new_category_name = "🥔 Spudbot 9000 🥔 (Offline)"
     print(f"Shutting down... :(")
     print(f"Category renamed to: {new_category_name}")
     category = discord.utils.get(client.get_all_channels(), id=trading_stats_channel_id)
