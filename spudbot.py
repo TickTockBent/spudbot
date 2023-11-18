@@ -154,12 +154,11 @@ async def fetch_api_data():
             current_time = datetime.now()
             formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
             print ("...Channel updates completed at: ", formatted_time)
-
-            else:
-                print("Failed to fetch API data.")
-
         except Exception as e:
             print(f"An error occurred: {e}")
+
+    else:
+        print("Failed to fetch API data.")
 
         if not TEST_MODE:
             # Wait for the specified time before making the next API call
