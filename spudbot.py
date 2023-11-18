@@ -23,6 +23,7 @@ layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
 network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
 active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
+last_price = None
 status_category_id = int(config['CHANNELS']['StatusCategoryID'])
 percent_total_supply_channel_id = int(config['CHANNELS']['PercentTotalSupplyChannelID'])
 TOTAL_SUPPLY = 2400000000
@@ -36,7 +37,7 @@ intents.guilds = True
 client = discord.Client(intents=intents)
 
 async def fetch_api_data():
-    global last_good_price
+    global last_good_price, last_price
     while not client.is_closed():
         try:
             price_message = "No price data."
@@ -52,9 +53,21 @@ async def fetch_api_data():
                 if price != -1:
                     # Update the last good price
                     last_good_price = round(data['price'], 2)
-                    price_message = f"Price: ${last_good_price}"
-                    print("Price found: $"+str(price_message))
-                elif last_good_price is not None:
+
+                    # Determine the price trend indicator
+                    if last_price is not None:
+                        if last_good_price > last_price:
+                            trend_indicator = " 🔼"
+                        elif last_good_price < last_price:
+                            trend_indicator = " 🔽"
+                        else:
+                            trend_indicator = ""  # No change
+                price_message = f"Price: ${last_good_price}{trend_indicator}"
+                print("Price found: $"+str(price_message))
+
+                # Update last_price for the next comparison
+                last_price = last_good_price
+                if last_good_price is not None:
                     # Use the last good price with an indication of being outdated
                     price_message = f"Price: ${last_good_price} (outdated)"
                     print("Price API offline. Using old price: $"+str(price_message))
@@ -68,6 +81,7 @@ async def fetch_api_data():
                 circulating_supply = "{:,}".format(circulating_supply_raw)
                 print("Circulating supply found: "+str(circulating_supply)+" SMH")
                 print("Percentage of total supply: %"+str(supply_percentage))
+                #Calculate market cap if price data is available                
                 market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
                 print("Market Cap found: $"+str(market_cap))
                 # Extract effectiveUnitsCommited and multiply by 64
