@@ -41,112 +41,119 @@ async def fetch_api_data():
     while not client.is_closed():
         try:
             price_message = "No price data."
-            price = "No price data available."
             trend_indicator = ""  # Initialize trend_indicator
+
             # Make an API request
             print("Spudbot fetching API data...")
             response = requests.get(API_ENDPOINT)
+
             if response.status_code == 200:
                 print("API fetch successful!")
                 data = response.json()
                 print("Calculating...")
-                price = data.get('price')
-                if price != -1:
-                    # Update the last good price
-                    last_good_price = round(data['price'], 2)
 
-                    # Determine the price trend indicator
-                    if last_price is not None:
-                        if last_good_price > last_price:
-                            trend_indicator = " 🔼"
-                        elif last_good_price < last_price:
-                            trend_indicator = " 🔽"
-                        else:
-                            trend_indicator = ""  # No change
+            price = data.get('price')
+            if price != -1:
+                # Update the last good price
+                last_good_price = round(data['price'], 2)
+
+                # Determine the price trend indicator
+                if last_price is not None:
+                    if last_good_price > last_price:
+                        trend_indicator = " 🔼"
+                    elif last_good_price < last_price:
+                        trend_indicator = " 🔽"
+
                 price_message = f"Price: ${last_good_price}{trend_indicator}"
                 print("Price found: $"+str(price_message))
 
                 # Update last_price for the next comparison
                 last_price = last_good_price
-                if last_good_price is not None:
-                    # Use the last good price with an indication of being outdated
-                    price_message = f"Price: ${last_good_price} (outdated)"
-                    print("Price API offline. Using old price: $"+str(price_message))
-                next_epoch_data = data['nextEpoch']
-                # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
-                circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
-                # Compute percentage of total supply dispersed
-                # Compute the percentage of total supply and round to two decimal places
-                supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
-                # Format for display
-                circulating_supply = "{:,}".format(circulating_supply_raw)
-                print("Circulating supply found: "+str(circulating_supply)+" SMH")
-                print("Percentage of total supply: %"+str(supply_percentage))
-                #Calculate market cap if price data is available                
-                market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
-                print("Market Cap found: $"+str(market_cap))
-                # Extract effectiveUnitsCommited and multiply by 64
-                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024))
-                print("Network size computed: "+str(effective_units_commited)+" TiB")
-                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024))
-                print("The next epoch will have: "+str(next_epoch_units_commited)+" TiB")
-                curr_epoch = data['epoch']
-                print("Epoch: "+str(curr_epoch))
-                next_epoch = next_epoch_data['epoch']
-                print("Next Epoch: "+str(next_epoch))
-                curr_layer = "{:,}".format(data['layer'])
-                print("Current layer: "+str(curr_layer))
-                active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
-                print("Total active smeshers: "+str(active_smeshers))
-                next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
-                print("The next epoch will have "+str(next_epoch_active_smeshers)+" active smeshers.")
 
-                if TEST_MODE:
-                    # Display test mode output variables
-                    print ("***********************")
-                    print ("**SPUDBOT 9000 ONLINE**")
-                    print ("***********************")
-                    print ("***Test Mode Enabled***")
-                    print ("***********************")
-                    print ("Raw API output: ")
-                    print(json.dumps(data, indent=4))
-                    print ("Primary Stats: ")
-                    print ("Price = $" + str(price))
-                    print ("Circulating Supply = " + str(circulating_supply) + " SMH")
-                    print ("Market Cap = $" + str(market_cap))
-                    print ("Nerd Stats:")
-                    print ("Current Epoch: " + str(curr_epoch))
-                    print ("Current Layer: " + str(curr_layer))
-                    print ("Total Network Size: " + str(effective_units_commited) + "TiB")
-                    print ("Active Smeshers: " + str(active_smeshers))
-                    # Exit if in test mode
-                    await client.close()
-                    return
+            elif last_good_price is not None:
+                # If the API returns -1 but a last good price exists
+                price_message = f"Price: ${last_good_price} (outdated)"
+                print("Price API offline. Using old price: $"+str(price_message))
+            else:
+                # If there's no last good price and the API returns -1
+                price_message = "Price data unavailable"
+                print(price_message)
 
-                # Create a message string (only if not in test mode)
-                # message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
-                current_time = datetime.now()
-                formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-                print ("Channel updates starting at: ", formatted_time)
-                await client.get_channel(price_channel_id).edit(name=f"{price_message}")
-                print ("...Price updated...")
-                await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
-                print ("...Circulating Supply updated...")
-                await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
-                print ("...Market Cap updated...")
-                await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
-                print ("...Current epoch updated...")
-                await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
-                print ("...Current layer updated...")
-                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited} TiB")
-                print ("...Network size updated...")
-                await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
-                print ("...Active smeshers updated...")
-                await client.get_channel(percent_total_supply_channel_id).edit(name=f"% Total Supply: %{supply_percentage}")
-                print ("...Percent total supply updated...")
-                current_time = datetime.now()
-                formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-                print ("...Channel updates completed at: ", formatted_time)
+            next_epoch_data = data['nextEpoch']
+            # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
+            circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
+            # Compute percentage of total supply dispersed
+            # Compute the percentage of total supply and round to two decimal places
+            supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
+            # Format for display
+            circulating_supply = "{:,}".format(circulating_supply_raw)
+            print("Circulating supply found: "+str(circulating_supply)+" SMH")
+            print("Percentage of total supply: %"+str(supply_percentage))
+            #Calculate market cap if price data is available                
+            market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
+            print("Market Cap found: $"+str(market_cap))
+            # Extract effectiveUnitsCommited and multiply by 64
+            effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024))
+            print("Network size computed: "+str(effective_units_commited)+" TiB")
+            next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024))
+            print("The next epoch will have: "+str(next_epoch_units_commited)+" TiB")
+            curr_epoch = data['epoch']
+            print("Epoch: "+str(curr_epoch))
+            next_epoch = next_epoch_data['epoch']
+            print("Next Epoch: "+str(next_epoch))
+            curr_layer = "{:,}".format(data['layer'])
+            print("Current layer: "+str(curr_layer))
+            active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
+            print("Total active smeshers: "+str(active_smeshers))
+            next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
+            print("The next epoch will have "+str(next_epoch_active_smeshers)+" active smeshers.")
+
+            if TEST_MODE:
+                # Display test mode output variables
+                print ("***********************")
+                print ("**SPUDBOT 9000 ONLINE**")
+                print ("***********************")
+                print ("***Test Mode Enabled***")
+                print ("***********************")
+                print ("Raw API output: ")
+                print(json.dumps(data, indent=4))
+                print ("Primary Stats: ")
+                print ("Price = $" + str(price))
+                print ("Circulating Supply = " + str(circulating_supply) + " SMH")
+                print ("Market Cap = $" + str(market_cap))
+                print ("Nerd Stats:")
+                print ("Current Epoch: " + str(curr_epoch))
+                print ("Current Layer: " + str(curr_layer))
+                print ("Total Network Size: " + str(effective_units_commited) + "TiB")
+                print ("Active Smeshers: " + str(active_smeshers))
+                # Exit if in test mode
+                await client.close()
+                return
+
+            # Create a message string (only if not in test mode)
+            # message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
+            current_time = datetime.now()
+            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+            print ("Channel updates starting at: ", formatted_time)
+            await client.get_channel(price_channel_id).edit(name=f"{price_message}")
+            print ("...Price updated...")
+            await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
+            print ("...Circulating Supply updated...")
+            await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
+            print ("...Market Cap updated...")
+            await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
+            print ("...Current epoch updated...")
+            await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
+            print ("...Current layer updated...")
+            await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_commited} TiB")
+            print ("...Network size updated...")
+            await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
+            print ("...Active smeshers updated...")
+            await client.get_channel(percent_total_supply_channel_id).edit(name=f"% Total Supply: %{supply_percentage}")
+            print ("...Percent total supply updated...")
+            current_time = datetime.now()
+            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+            print ("...Channel updates completed at: ", formatted_time)
 
             else:
                 print("Failed to fetch API data.")
