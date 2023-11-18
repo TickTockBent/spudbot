@@ -42,6 +42,7 @@ async def fetch_api_data():
         try:
             price_message = "No price data."
             trend_indicator = ""  # Initialize trend_indicator
+            market_cap_message = "Pending price data"  # Default market cap message
 
             # Make an API request
             print("Spudbot fetching API data...")
@@ -52,6 +53,15 @@ async def fetch_api_data():
                 data = response.json()
                 print("Calculating...")
 
+                # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
+                circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
+                # Compute percentage of total supply dispersed
+                # Compute the percentage of total supply and round to two decimal places
+                supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
+                # Format for display
+                circulating_supply = "{:,}".format(circulating_supply_raw)
+                print("Circulating supply found: "+str(circulating_supply)+" SMH")
+                
                 price = data.get('price')
                 if price != -1:
                     # Update the last good price
@@ -70,24 +80,25 @@ async def fetch_api_data():
                     # Update last_price for the next comparison
                     last_price = last_good_price
 
+                    # Calculate market cap based on current price
+                    market_cap = circulating_supply_raw * last_good_price
+                    market_cap_message = f"M.Cap: ${'{:,}'.format(market_cap)}"
+
                 elif last_good_price is not None:
                     # If the API returns -1 but a last good price exists
                     price_message = f"Price: ${last_good_price} (outdated)"
                     print("Price API offline. Using old price: $"+str(price_message))
+                    # Estimate market cap based on last good price
+                    estimated_market_cap = (last_good_price * circulating_supply)  # Replace 'some_conversion_factor' with actual conversion
+                    estimated_market_cap = circulating_supply_raw * last_good_price
+                    market_cap_message = f"M.Cap: est ~${'{:,}'.format(estimated_market_cap)}"
+                    print("Price API offline. Approximate Market Cap: $"+str(estimated_market_cap))
                 else:
                     # If there's no last good price and the API returns -1
                     price_message = "Price data unavailable"
                     print(price_message)
 
                 next_epoch_data = data['nextEpoch']
-                # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
-                circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
-                # Compute percentage of total supply dispersed
-                # Compute the percentage of total supply and round to two decimal places
-                supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
-                # Format for display
-                circulating_supply = "{:,}".format(circulating_supply_raw)
-                print("Circulating supply found: "+str(circulating_supply)+" SMH")
                 print("Percentage of total supply: %"+str(supply_percentage))
                 #Calculate market cap if price data is available                
                 market_cap = "{:,}".format(round(data['marketCap'] / 1_000_000_000)) #divide by 1 billion and round so we report SMH not smidge
@@ -117,7 +128,7 @@ async def fetch_api_data():
                 print ("...Price updated...")
                 await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
                 print ("...Circulating Supply updated...")
-                await client.get_channel(market_cap_channel_id).edit(name=f"M.Cap: ${market_cap}")
+                await client.get_channel(market_cap_channel_id).edit(name=market_cap_message)
                 print ("...Market Cap updated...")
                 await client.get_channel(epoch_channel_id).edit(name=f"Epoch: {curr_epoch}")
                 print ("...Current epoch updated...")
