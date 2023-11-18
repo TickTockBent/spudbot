@@ -136,7 +136,7 @@ async def fetch_api_data():
                 print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {active_smeshers}")
                 print ("...Active smeshers updated...")
-                await client.get_channel(percent_total_supply_channel_id).edit(name=f"% Total Supply: %{supply_percentage}")
+                await client.get_channel(percent_total_supply_channel_id).edit(name=f"% Total Supply: {supply_percentage}%")
                 print ("...Percent total supply updated...")
                 current_time = datetime.now()
                 formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
