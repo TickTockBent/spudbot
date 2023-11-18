@@ -3,8 +3,10 @@ import requests
 import configparser
 import json
 import asyncio
+import signal
 from datetime import datetime
 from discord import Intents
+
 
 # Read configuration file
 config = configparser.ConfigParser()
@@ -21,8 +23,8 @@ layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
 network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
 active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
-trading_stats_channel_id = int(config['CHANNELS'['TradingStatsCategoryID']])
-network_stats_channel_id = int(config['CHANNELS'['NetworkStatsCategoryID']])
+trading_stats_channel_id = int(config['CHANNELS'['TradingStatsCategoryID'])
+network_stats_channel_id = int(config['CHANNELS'['NetworkStatsCategoryID'])
 
 # Define intents
 intents = Intents.default()
@@ -140,7 +142,35 @@ async def on_ready():
     print ("***********************")
     print ("***Prod Mode Enabled***")
     print ("***********************")
+    print ("Finding category...")
+    # Find the category by ID
+    new_category_name = "Trading Stats (Online)"
+    category = discord.utils.get(client.get_all_channels(), id=trading_stats_channel_id)
+    print ("Checking category...")
+    # Check if the category is found and is indeed a category channel
+    if category and isinstance(category, discord.CategoryChannel):
+        # Rename the category
+        await category.edit(name=new_category_name)
+        print(f"Category renamed to: {new_category_name}")
+    else:
+        print("Category not found or not a category channel")
     client.loop.create_task(fetch_api_data())
+
+async def shutdown_signal():
+    new_category_name = "Trading Stats (Offline)"
+    print(f"Shutting down... :(")
+    print(f"Category renamed to: {new_category_name}")
+    category = discord.utils.get(client.get_all_channels(), id=trading_stats_channel_id)
+    if category:
+        await category.edit(name=new_category_name)
+    await client.close()
+
+# Signal handler
+def handle_shutdown_signal(*args):
+    asyncio.create_task(shutdown_signal())
+
+signal.signal(signal.SIGINT, handle_shutdown_signal)
+signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
 # Run the bot
 client.run(TOKEN)
