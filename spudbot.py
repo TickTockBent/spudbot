@@ -26,7 +26,7 @@ last_good_price = None
 last_price = None
 status_category_id = int(config['CHANNELS']['StatusCategoryID'])
 percent_total_supply_channel_id = int(config['CHANNELS']['PercentTotalSupplyChannelID'])
-TOTAL_SUPPLY = 2400000000
+TOTAL_SUPPLY = 150000000
 
 # Define intents
 intents = Intents.default()
@@ -55,7 +55,7 @@ async def fetch_api_data():
 
                 # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
                 circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
-                # Compute percentage of total supply dispersed
+                TOTAL_SUPPLY = 150000000 + circulating_supply_raw  # Recalculate TOTAL_SUPPLY with updated circulating_supply_raw
                 # Compute the percentage of total supply and round to two decimal places
                 supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
                 # Format for display
