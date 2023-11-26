@@ -90,7 +90,6 @@ async def fetch_api_data():
                     price_message = f"Price: ${last_good_price} (outdated)"
                     print("Price API offline. Using old price: $"+str(price_message))
                     # Estimate market cap based on last good price
-                    estimated_market_cap = (last_good_price * circulating_supply)  # Replace 'some_conversion_factor' with actual conversion
                     estimated_market_cap = circulating_supply_raw * last_good_price
                     market_cap_message = f"M.Cap: est ~${'{:,}'.format(estimated_market_cap)}"
                     print("Price API offline. Approximate Market Cap: $"+str(estimated_market_cap))
