@@ -81,7 +81,7 @@ async def fetch_api_data():
                     last_price = last_good_price
 
                     # Calculate market cap based on current price
-                    market_cap = circulating_supply_raw * last_good_price
+                    market_cap = round(circulating_supply_raw * last_good_price,2)
                     market_cap_message = f"M.Cap: ${'{:,}'.format(market_cap)}"
                     print("Market Cap found: $"+str(market_cap_message))
 
