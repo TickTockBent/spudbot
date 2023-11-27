@@ -55,7 +55,7 @@ async def fetch_api_data():
             if raw_data:
                 print("API fetch successful!")
                 data = api_handler.parse_data(raw_data)
-                next_epoch_data = api_handler.parse_data(next_epoch)
+                next_epoch_data = data.get('nextEpoch', {})  # Get nextEpoch data directly
                 print("Got raw data, now calculating the display data...")
 
                 curr_epoch = data['epoch']
