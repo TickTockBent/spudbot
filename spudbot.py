@@ -44,7 +44,7 @@ async def fetch_api_data():
 
             # Make an API request
             print("Spudbot fetching API data...")
-            response = requests.get(API_ENDPOINT)
+            response = requests.get(api_endpoint)
 
             if response.status_code == 200:
                 print("API fetch successful!")
@@ -145,7 +145,7 @@ async def fetch_api_data():
         except Exception as e:
             print(f"An error occurred: {e}")
 
-        await asyncio.sleep(WAIT_TIME)
+        await asyncio.sleep(wait_time)
 
 
 
