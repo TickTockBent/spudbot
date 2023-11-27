@@ -188,4 +188,4 @@ signal.signal(signal.SIGINT, handle_shutdown_signal)
 signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
 # Run the bot
-client.run(TOKEN)
+client.run(token)
