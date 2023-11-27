@@ -14,16 +14,16 @@ token = config_handler.get_setting('DEFAULT', 'Token')
 api_endpoint = config_handler.get_setting('DEFAULT', 'APIEndpoint')
 wait_time = int(config_handler.get_setting('DEFAULT', 'WaitTime'))
 price_channel_id = int(config_handler.get_setting('CHANNELS', 'PriceChannelID'))
-circulating_supply_channel_id = int(config_handler.get_setting['CHANNELS']['CirculatingSupplyChannelID'])
-market_cap_channel_id = int(config_handler.get_setting['CHANNELS']['MarketCapChannelID'])
-epoch_channel_id = int(config_handler.get_setting['CHANNELS']['EpochChannelID'])
-layer_channel_id = int(config_handler.get_setting['CHANNELS']['LayerChannelID'])
-network_size_channel_id = int(config_handler.get_setting['CHANNELS']['NetworkSizeChannelID'])
-active_smeshers_channel_id = int(config_handler.get_setting['CHANNELS']['ActiveSmeshersChannelID'])
+circulating_supply_channel_id = int(config_handler.get_setting('CHANNELS', 'CirculatingSupplyChannelID'))
+market_cap_channel_id = int(config_handler.get_setting('CHANNELS', 'MarketCapChannelID'))
+epoch_channel_id = int(config_handler.get_setting('CHANNELS', 'EpochChannelID'))
+layer_channel_id = int(config_handler.get_setting('CHANNELS', 'LayerChannelID'))
+network_size_channel_id = int(config_handler.get_setting('CHANNELS', 'NetworkSizeChannelID'))
+active_smeshers_channel_id = int(config_handler.get_setting('CHANNELS', 'ActiveSmeshersChannelID'))
 last_good_price = None
 last_price = None
-status_category_id = int(config_handler.get_setting['CHANNELS']['StatusCategoryID'])
-percent_total_supply_channel_id = int(config_handler.get_setting['CHANNELS']['PercentTotalSupplyChannelID'])
+status_category_id = int(config_handler.get_setting('CHANNELS', 'StatusCategoryID'))
+percent_total_supply_channel_id = int(config_handler.get_setting('CHANNELS', 'PercentTotalSupplyChannelID'))
 TOTAL_SUPPLY = 150000000
 
 # Define intents
