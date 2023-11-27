@@ -1,6 +1,6 @@
 import discord
 import requests
-import configparser
+from config_handler import ConfigHandler
 import json
 import asyncio
 import signal
@@ -9,23 +9,21 @@ from discord import Intents
 
 
 # Read configuration file
-config = configparser.ConfigParser()
-config.read('config.ini')
-TOKEN = config['DEFAULT']['Token']
-API_ENDPOINT = config['DEFAULT']['APIEndpoint']
-WAIT_TIME = int(config['DEFAULT']['WaitTime'])
-TEST_MODE = config.getboolean('DEFAULT', 'TestMode')
-price_channel_id = int(config['CHANNELS']['PriceChannelID'])
-circulating_supply_channel_id = int(config['CHANNELS']['CirculatingSupplyChannelID'])
-market_cap_channel_id = int(config['CHANNELS']['MarketCapChannelID'])
-epoch_channel_id = int(config['CHANNELS']['EpochChannelID'])
-layer_channel_id = int(config['CHANNELS']['LayerChannelID'])
-network_size_channel_id = int(config['CHANNELS']['NetworkSizeChannelID'])
-active_smeshers_channel_id = int(config['CHANNELS']['ActiveSmeshersChannelID'])
+config_handler = ConfigHandler()
+token = config_handler.get_setting('DEFAULT', 'Token')
+api_endpoint = config_handler.get_setting('DEFAULT', 'APIEndpoint')
+wait_time = int(config_handler.get_setting('DEFAULT', 'WaitTime'))
+price_channel_id = int(config_handler.get_setting('CHANNELS', 'PriceChannelID'))
+circulating_supply_channel_id = int(config_handler.get_setting['CHANNELS']['CirculatingSupplyChannelID'])
+market_cap_channel_id = int(config_handler.get_setting['CHANNELS']['MarketCapChannelID'])
+epoch_channel_id = int(config_handler.get_setting['CHANNELS']['EpochChannelID'])
+layer_channel_id = int(config_handler.get_setting['CHANNELS']['LayerChannelID'])
+network_size_channel_id = int(config_handler.get_setting['CHANNELS']['NetworkSizeChannelID'])
+active_smeshers_channel_id = int(config_handler.get_setting['CHANNELS']['ActiveSmeshersChannelID'])
 last_good_price = None
 last_price = None
-status_category_id = int(config['CHANNELS']['StatusCategoryID'])
-percent_total_supply_channel_id = int(config['CHANNELS']['PercentTotalSupplyChannelID'])
+status_category_id = int(config_handler.get_setting['CHANNELS']['StatusCategoryID'])
+percent_total_supply_channel_id = int(config_handler.get_setting['CHANNELS']['PercentTotalSupplyChannelID'])
 TOTAL_SUPPLY = 150000000
 
 # Define intents
