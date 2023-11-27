@@ -18,9 +18,9 @@ network_size_channel_id = config_handler.get_channel_id('NetworkSizeChannelID')
 active_smeshers_channel_id = config_handler.get_channel_id('ActiveSmeshersChannelID')
 status_category_id = config_handler.get_channel_id('StatusCategoryID')
 percent_total_supply_channel_id = config_handler.get_channel_id('PercentTotalSupplyChannelID')
-token = config_handler.get_token('Token')
-api_endpoint = config_handler.get_api_endpoint('APIEndpoint')
-wait_time = config_handler.get_wait_time('WaitTime')
+token = config_handler.get_token()
+api_endpoint = config_handler.get_api_endpoint()
+wait_time = config_handler.get_wait_time()
 
 # setup vars
 last_good_price = None
