@@ -34,3 +34,8 @@ class ConfigHandler:
         except (configparser.NoSectionError, configparser.NoOptionError) as e:
             print(f"Error retrieving setting [{section}][{key}]: {e}")
             return None
+        
+# Example usage
+if __name__ == "__main__":
+    config_handler = ConfigHandler()
+    print(config_handler.get_token())
