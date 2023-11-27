@@ -7,24 +7,25 @@ import signal
 from datetime import datetime
 from discord import Intents
 
-
-# Read configuration file
+# Read Confighandler vals
 config_handler = ConfigHandler()
-token = config_handler.get_setting('DEFAULT', 'Token')
-api_endpoint = config_handler.get_setting('DEFAULT', 'APIEndpoint')
-wait_time = int(config_handler.get_setting('DEFAULT', 'WaitTime'))
-price_channel_id = int(config_handler.get_setting('CHANNELS', 'PriceChannelID'))
-circulating_supply_channel_id = int(config_handler.get_setting('CHANNELS', 'CirculatingSupplyChannelID'))
-market_cap_channel_id = int(config_handler.get_setting('CHANNELS', 'MarketCapChannelID'))
-epoch_channel_id = int(config_handler.get_setting('CHANNELS', 'EpochChannelID'))
-layer_channel_id = int(config_handler.get_setting('CHANNELS', 'LayerChannelID'))
-network_size_channel_id = int(config_handler.get_setting('CHANNELS', 'NetworkSizeChannelID'))
-active_smeshers_channel_id = int(config_handler.get_setting('CHANNELS', 'ActiveSmeshersChannelID'))
+price_channel_id = config_handler.get_channel_id('PriceChannelID')
+circulating_supply_channel_id = config_handler.get_channel_id('CirculatingSupplyChannelID')
+market_cap_channel_id = config_handler.get_channel_id('MarketCapChannelID')
+epoch_channel_id = config_handler.get_channel_id('EpochChannelID')
+layer_channel_id = config_handler.get_channel_id('LayerChannelID')
+network_size_channel_id = config_handler.get_channel_id('NetworkSizeChannelID')
+active_smeshers_channel_id = config_handler.get_channel_id('ActiveSmeshersChannelID')
+status_category_id = config_handler.get_channel_id('StatusCategoryID')
+percent_total_supply_channel_id = config_handler.get_channel_id('PercentTotalSupplyChannelID')
+token = config_handler.get_token('Token')
+api_endpoint = config_handler.get_api_endpoint('APIEndpoint')
+wait_time = config_handler.get_wait_time('WaitTime')
+
+# setup vars
 last_good_price = None
 last_price = None
-status_category_id = int(config_handler.get_setting('CHANNELS', 'StatusCategoryID'))
-percent_total_supply_channel_id = int(config_handler.get_setting('CHANNELS', 'PercentTotalSupplyChannelID'))
-TOTAL_SUPPLY = 150000000
+TOTAL_SUPPLY = 150000000 #Vaulted coins. Needs to change next july or once we make a live API
 
 # Define intents
 intents = Intents.default()

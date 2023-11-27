@@ -15,6 +15,18 @@ class ConfigHandler:
         except Exception as e:
             print(f"Error reading config file: {e}")
 
+    def get_token(self):
+        return self.get_setting('DEFAULT', 'Token')
+
+    def get_api_endpoint(self):
+        return self.get_setting('DEFAULT', 'APIEndpoint')
+
+    def get_wait_time(self):
+        return int(self.get_setting('DEFAULT', 'WaitTime'))
+
+    def get_channel_id(self, channel_name):
+        return int(self.get_setting('CHANNELS', channel_name))
+
     def get_setting(self, section, key):
         # Retrieve a specific setting
         try:
