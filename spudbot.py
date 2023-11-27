@@ -43,27 +43,52 @@ async def fetch_api_data():
     global last_good_price, last_price
     while not client.is_closed():
         try:
+            #Reset temp vars
             price_message = "No price data."
             trend_indicator = ""  # Initialize trend_indicator
             market_cap_message = "Pending price data"  # Default market cap message
 
             # Make an API request
             print("Spudbot fetching API data...")
-            response = requests.get(api_endpoint)
+            raw_data = api_handler.fetch_data()
 
-            if response.status_code == 200:
+            if raw_data:
                 print("API fetch successful!")
-                data = response.json()
-                print("Calculating...")
+                data = api_handler.parse_data(raw_data)
+                next_epoch_data = api_handler.parse_data(next_epoch)
+                print("Got raw data, now calculating the display data...")
 
+                curr_epoch = data['epoch']
+                print("Epoch: "+str(curr_epoch))
+                
+                curr_layer = "{:,}".format(data['layer'])
+                print("Current layer: "+str(curr_layer))
+                
                 # Extract circulatingSupply and divide by 1 billion to get raw number of SMH
                 circulating_supply_raw = round(data['circulatingSupply'] / 1_000_000_000)
-                TOTAL_SUPPLY = 150000000 + circulating_supply_raw  # Recalculate TOTAL_SUPPLY with updated circulating_supply_raw
+                # Recalculate TOTAL_SUPPLY with updated circulating_supply_raw
+                TOTAL_SUPPLY = 150000000 + circulating_supply_raw  
                 # Compute the percentage of total supply and round to two decimal places
                 supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
-                # Format for display
-                circulating_supply = "{:,}".format(circulating_supply_raw)
-                print("Circulating supply found: "+str(circulating_supply)+" SMH")
+                print("Percentage of total supply: %"+str(supply_percentage))
+                
+                # Extract effectiveUnitsCommited and multiply by 64
+                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024 / 1024, 2))
+                print("Network size computed: "+str(effective_units_commited)+" PiB")
+                active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
+                print("Total active smeshers: "+str(active_smeshers))
+
+                # Next Epoch Data (As far as we know from submitted ATX)
+                next_epoch = next_epoch_data['epoch']
+                print("Next Epoch: "+str(next_epoch))
+                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024 / 1024, 2))
+                print("The next epoch will have: "+str(next_epoch_units_commited)+" PiB")
+                next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
+                print("The next epoch will have "+str(next_epoch_active_smeshers)+" active smeshers.")
+
+                # Format data for display
+                circulating_supply_formatted = "{:,}".format(circulating_supply_raw)
+                print("Circulating supply found: "+str(circulating_supply_formatted)+" SMH")
                 
                 price = data.get('price')
                 if price != -1:
@@ -101,24 +126,6 @@ async def fetch_api_data():
                     price_message = "Price data unavailable"
                     print(price_message)
 
-                next_epoch_data = data['nextEpoch']
-                print("Percentage of total supply: %"+str(supply_percentage))
-                # Extract effectiveUnitsCommited and multiply by 64
-                effective_units_commited = "{:,}".format(round(data['effectiveUnitsCommited'] * 64 / 1024 / 1024, 2))
-                print("Network size computed: "+str(effective_units_commited)+" PiB")
-                next_epoch_units_commited = "{:,}".format(round(next_epoch_data['effectiveUnitsCommited'] * 64 / 1024 / 1024, 2))
-                print("The next epoch will have: "+str(next_epoch_units_commited)+" PiB")
-                curr_epoch = data['epoch']
-                print("Epoch: "+str(curr_epoch))
-                next_epoch = next_epoch_data['epoch']
-                print("Next Epoch: "+str(next_epoch))
-                curr_layer = "{:,}".format(data['layer'])
-                print("Current layer: "+str(curr_layer))
-                active_smeshers = "{:,}".format(data['totalActiveSmeshers'])
-                print("Total active smeshers: "+str(active_smeshers))
-                next_epoch_active_smeshers = "{:,}".format(round(next_epoch_data['totalActiveSmeshers']))
-                print("The next epoch will have "+str(next_epoch_active_smeshers)+" active smeshers.")
-
                 # Create a message string (only if not in test mode)
                 # message = '\n'.join([f"{key}: {value}" for key, value in data.items()])
                 current_time = datetime.now()
@@ -126,7 +133,7 @@ async def fetch_api_data():
                 print ("Channel updates starting at: ", formatted_time)
                 await client.get_channel(price_channel_id).edit(name=f"{price_message}")
                 print ("...Price updated...")
-                await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply} SMH")
+                await client.get_channel(circulating_supply_channel_id).edit(name=f"C.Supply: {circulating_supply_formatted} SMH")
                 print ("...Circulating Supply updated...")
                 await client.get_channel(market_cap_channel_id).edit(name=market_cap_message)
                 print ("...Market Cap updated...")
