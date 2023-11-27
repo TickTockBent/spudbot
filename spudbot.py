@@ -1,5 +1,6 @@
 import discord
 import requests
+from api_handler import APIHandler
 from config_handler import ConfigHandler
 import json
 import asyncio
@@ -21,6 +22,9 @@ percent_total_supply_channel_id = config_handler.get_channel_id('PercentTotalSup
 token = config_handler.get_token()
 api_endpoint = config_handler.get_api_endpoint()
 wait_time = config_handler.get_wait_time()
+
+#API Setup
+api_handler = APIHandler(api_endpoint)
 
 # setup vars
 last_good_price = None
