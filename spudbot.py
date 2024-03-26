@@ -25,7 +25,7 @@ wait_time = config_handler.get_wait_time()
 api_key = config_handler.get_api_key()
 
 #API Setup
-api_handler = APIHandler(api_endpoint)
+api_handler = APIHandler(api_endpoint, api_key)
 
 # setup vars
 last_good_price = None
