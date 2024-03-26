@@ -1,5 +1,4 @@
 import requests
-import requests_toolbelt
 from requests_toolbelt.utils import dump
 
 class APIHandler:
