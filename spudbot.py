@@ -22,6 +22,7 @@ percent_total_supply_channel_id = config_handler.get_channel_id('PercentTotalSup
 token = config_handler.get_token()
 api_endpoint = config_handler.get_api_endpoint()
 wait_time = config_handler.get_wait_time()
+api_key = config_handler.get_api_key()
 
 #API Setup
 api_handler = APIHandler(api_endpoint)
