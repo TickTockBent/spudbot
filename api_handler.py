@@ -1,4 +1,5 @@
 import requests
+from requests_toolbelt.utils import dump
 
 class APIHandler:
     def __init__(self, api_endpoint, api_key):
@@ -7,6 +8,8 @@ class APIHandler:
 
     def fetch_data(self):
         headers = {"x-api-key": self.api_key}
+        prepped = requests.Request('GET', self.api_endpoint, headers=headers).prepare()
+        print(dump.dump_all(prepped).decode('utf-8'))
         try:
             response = requests.get(self.api_endpoint, headers=headers)
             response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
