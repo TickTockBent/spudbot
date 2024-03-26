@@ -1,7 +1,7 @@
 import requests
 
 class APIHandler:
-    def __init__(self, api_endpoint):
+    def __init__(self, api_endpoint, api_key):
         self.api_endpoint = api_endpoint
         self.api_key = api_key
 
