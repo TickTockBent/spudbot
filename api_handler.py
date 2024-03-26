@@ -3,10 +3,12 @@ import requests
 class APIHandler:
     def __init__(self, api_endpoint):
         self.api_endpoint = api_endpoint
+        self.api_key = api_key
 
     def fetch_data(self):
+        headers = {'Authorization': f'Bearer {self.api_key}'}
         try:
-            response = requests.get(self.api_endpoint)
+            response = requests.get(self.api_endpoint, headers=headers)
             response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
             return response.json()
         except requests.RequestException as e:

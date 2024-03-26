@@ -20,6 +20,9 @@ class ConfigHandler:
 
     def get_api_endpoint(self):
         return self.get_setting('DEFAULT', 'APIEndpoint')
+    
+    def get_api_key(self):
+        return self.get_setting('DEFAULT', 'API_Key')
 
     def get_wait_time(self):
         return int(self.get_setting('DEFAULT', 'WaitTime'))
