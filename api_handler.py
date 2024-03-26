@@ -6,7 +6,7 @@ class APIHandler:
         self.api_key = api_key
 
     def fetch_data(self):
-        headers = {'Authorization': f'Bearer {self.api_key}'}
+        headers = {"x-api-key": self.api_key}
         try:
             response = requests.get(self.api_endpoint, headers=headers)
             response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
