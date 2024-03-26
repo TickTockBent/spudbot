@@ -11,7 +11,7 @@ class APIHandler:
         session = requests.Session()
         request = requests.Request('GET', self.api_endpoint, headers=headers)
         prepped = session.prepare_request(request)
-        print(dump.dump_request(prepped).decode('utf-8'))
+        print(dump.dump_all(response).decode('utf-8'))
         try:
             response = session.send(prepped)
             response.raise_for_status()  # Will raise an HTTPError for bad responses
