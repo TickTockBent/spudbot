@@ -11,6 +11,7 @@ class APIHandler:
         session = requests.Session()
         request = requests.Request('GET', self.api_endpoint, headers=headers)
         prepped = session.prepare_request(request)
+        response = session.send(prepped)
         print(dump.dump_all(response).decode('utf-8'))
         try:
             response = session.send(prepped)
