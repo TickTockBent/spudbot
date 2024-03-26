@@ -8,11 +8,13 @@ class APIHandler:
 
     def fetch_data(self):
         headers = {"x-api-key": self.api_key}
-        prepped = requests.Request('GET', self.api_endpoint, headers=headers).prepare()
-        print(dump.dump_all(prepped).decode('utf-8'))
+        session = requests.Session()
+        request = requests.Request('GET', self.api_endpoint, headers=headers)
+        prepped = session.prepare_request(request)
+        print(dump.dump_request(prepped).decode('utf-8'))
         try:
-            response = requests.get(self.api_endpoint, headers=headers)
-            response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+            response = session.send(prepped)
+            response.raise_for_status()  # Will raise an HTTPError for bad responses
             return response.json()
         except requests.RequestException as e:
             print(f"Error fetching data from API: {e}")
