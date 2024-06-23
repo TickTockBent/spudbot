@@ -75,6 +75,8 @@ async def fetch_api_data():
                 
                 effective_capacity_pib = (data['effectiveUnitsCommited'] * 64) / (1024 * 1024)
                 effective_units_committed = "{:,.2f}".format(effective_capacity_pib)
+                effective_capacity_eib = (data['effectiveUnitsCommitted'] * 64) / (1024 * 1024 * 1024)
+                effective_units_committed = "{:.2f}".format(effective_capacity_eib)
                 print("Network size computed: "+str(effective_capacity_pib)+" PiB")
                 active_smeshers = data['totalActiveSmeshers']                
                 print("Total active smeshers: "+str(active_smeshers))
@@ -144,7 +146,7 @@ async def fetch_api_data():
                 print ("...Current epoch updated...")
                 await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
                 print ("...Current layer updated...")
-                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_capacity_pib} PiB")
+                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_capacity_eib} EiB")
                 print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Activations: {formatted_smeshers}")
                 print ("...Active smeshers updated...")
