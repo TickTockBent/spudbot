@@ -146,7 +146,7 @@ async def fetch_api_data():
                 print ("...Current layer updated...")
                 await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_capacity_pib} PiB")
                 print ("...Network size updated...")
-                await client.get_channel(active_smeshers_channel_id).edit(name=f"Active Smeshers: {formatted_smeshers}")
+                await client.get_channel(active_smeshers_channel_id).edit(name=f"Activations: {formatted_smeshers}")
                 print ("...Active smeshers updated...")
                 await client.get_channel(percent_total_supply_channel_id).edit(name=f"% Total Supply: {supply_percentage}%")
                 print ("...Percent total supply updated...")
