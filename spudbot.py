@@ -77,7 +77,7 @@ async def fetch_api_data():
                 effective_units_committed = "{:,.2f}".format(effective_capacity_pib)
                 effective_capacity_eib = (data['effectiveUnitsCommitted'] * 64) / (1024 * 1024 * 1024)
                 effective_units_committed = "{:.2f}".format(effective_capacity_eib)
-                print("Network size computed: "+str(effective_capacity_pib)+" PiB")
+                print("Network size computed: "+str(effective_capacity_eib)+" EiB")
                 active_smeshers = data['totalActiveSmeshers']                
                 print("Total active smeshers: "+str(active_smeshers))
                 formatted_smeshers = f"{active_smeshers:,}"
