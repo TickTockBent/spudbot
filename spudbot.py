@@ -73,14 +73,12 @@ async def fetch_api_data():
                 supply_percentage = round((circulating_supply_raw / TOTAL_SUPPLY) * 100, 2)
                 print("Percentage of total supply: %"+str(supply_percentage))
                 
-                effective_capacity_pib = (data['effectiveUnitsCommited'] * 64) / (1024 * 1024)
-                effective_units_committed = "{:,.2f}".format(effective_capacity_pib)
                 effective_capacity_eib = (data['effectiveUnitsCommited'] * 64) / (1024 * 1024 * 1024)
                 effective_units_committed = "{:.2f}".format(effective_capacity_eib)
                 print("Network size computed: "+str(effective_capacity_eib)+" EiB")
                 active_smeshers = data['totalActiveSmeshers']                
                 print("Total active smeshers: "+str(active_smeshers))
-                formatted_smeshers = f"{active_smeshers:,}"
+                formatted_smeshers = f"{active_smeshers / 1_000_000:.1f}M"
                 print(f"Formatting active smeshers: {formatted_smeshers}")
 
                 # Next Epoch Data (As far as we know from submitted ATX)
@@ -146,7 +144,7 @@ async def fetch_api_data():
                 print ("...Current epoch updated...")
                 await client.get_channel(layer_channel_id).edit(name=f"Layer: {curr_layer}")
                 print ("...Current layer updated...")
-                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_capacity_eib} EiB")
+                await client.get_channel(network_size_channel_id).edit(name=f"Network Size: {effective_units_committed} EiB")
                 print ("...Network size updated...")
                 await client.get_channel(active_smeshers_channel_id).edit(name=f"Activations: {formatted_smeshers}")
                 print ("...Active smeshers updated...")
