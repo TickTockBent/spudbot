@@ -12,14 +12,14 @@ API_KEY = 'e981bf13-3715-498c-ae32-dbd1301cb9c5'
 
 # Channel IDs to be updated (placeholders for now)
 CHANNEL_IDS = {
-    'price': 1262398089830858823,
-    'circulatingsupply': 1262397961086963814,
-    'marketcap': 1262398109921837068,
-    'epoch': 1262398146072412200,
-    'layer': 1262398059875270656,
-    'networksize': 1262398171191967838,
-    'activesmeshers': 1262397844174798939,
-    'percenttotalsupply': 1262398128305471549
+    'price': 1174914635678359552,
+    'circulatingsupply': 1174914741366423552,
+    'marketcap': 1174914767098486905,
+    'epoch': 1174914788124532867,
+    'layer': 1174914827622285364,
+    'networksize': 1174914845255147591,
+    'activesmeshers': 1175047280252952677,
+    'percenttotalsupply': 1175459680387076167
 }
 
 CATEGORY_ID = 1262397774692089899
