@@ -11,6 +11,7 @@ class APICog(commands.Cog):
         self.price_history = deque(maxlen=10)
         self.current_data = None
         self.session = None
+        self.update_interval = self.bot.config['INTERVAL']
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
@@ -48,11 +49,8 @@ class APICog(commands.Cog):
             return "↑"
         avg_price = statistics.mean(self.price_history)
         return "↑" if current_price >= avg_price else "↓"
-    
-    def get_update_interval(self):
-        return self.bot.config['INTERVAL']
 
-    @tasks.loop(seconds=get_update_interval)
+    @tasks.loop()
     async def update_data(self):
         try:
             logging.info("Fetching API data...")
@@ -70,7 +68,8 @@ class APICog(commands.Cog):
     @update_data.before_loop
     async def before_update_data(self):
         await self.bot.wait_until_ready()
-        logging.info("Starting update_data loop")
+        self.update_data.change_interval(seconds=self.update_interval)
+        logging.info(f"Starting update_data loop with interval: {self.update_interval} seconds")
 
 async def setup(bot):
     await bot.add_cog(APICog(bot))
