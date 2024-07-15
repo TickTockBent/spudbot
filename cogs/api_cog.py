@@ -43,6 +43,12 @@ class APICog(commands.Cog):
             'formatted_price': f"${price:.2f}",
             'trend': self.calculate_trend(price)
         }
+    
+    def process_layer(self, layer):
+        return f"Layer: {layer}"
+
+    def process_epoch(self, epoch):
+        return f"Epoch: {epoch}"
 
     def calculate_trend(self, current_price):
         if not self.price_history:
@@ -60,6 +66,8 @@ class APICog(commands.Cog):
                 price_data = self.process_price(data['price'])
                 logging.info(f"Dispatching price update: {price_data}")
                 self.bot.dispatch('price_update', price_data)
+                self.bot.dispatch('layer_update', self.process_layer(data['layer']))
+                self.bot.dispatch('epoch_update', self.process_epoch(data['epoch']))
             else:
                 logging.warning("Failed to fetch API data")
         except Exception as e:
