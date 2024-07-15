@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands, tasks
 import logging
+import json
+import os
 
 class EmbedCog(commands.Cog):
     def __init__(self, bot):
@@ -10,10 +12,24 @@ class EmbedCog(commands.Cog):
             logging.error("Embed channel ID is not set in the config CHANNEL_IDS")
             return
         self.embed_message_id = None
+        self.load_embed_id()
         self.update_embed.start()
 
     def cog_unload(self):
         self.update_embed.cancel()
+        self.save_embed_id()
+
+    def load_embed_id(self):
+        try:
+            with open('embed_data.json', 'r') as f:
+                data = json.load(f)
+                self.embed_message_id = data.get('message_id')
+        except FileNotFoundError:
+            self.embed_message_id = None
+
+    def save_embed_id(self):
+        with open('embed_data.json', 'w') as f:
+            json.dump({'message_id': self.embed_message_id}, f)
 
     def generate_embed(self):
         embed = discord.Embed(title="Spacemesh Network Stats", color=0x00ff00)
@@ -35,6 +51,12 @@ class EmbedCog(commands.Cog):
         embed.set_footer(text=f"Last updated: {discord.utils.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
         return embed
 
+    async def find_existing_embed(self, channel):
+        async for message in channel.history(limit=100):
+            if message.author == self.bot.user and message.embeds:
+                return message
+        return None
+
     async def create_or_update_embed(self):
         channel = self.bot.get_channel(self.embed_channel_id)
         if not channel:
@@ -45,14 +67,22 @@ class EmbedCog(commands.Cog):
 
         try:
             if self.embed_message_id:
-                message = await channel.fetch_message(self.embed_message_id)
+                try:
+                    message = await channel.fetch_message(self.embed_message_id)
+                except discord.errors.NotFound:
+                    message = await self.find_existing_embed(channel)
+            else:
+                message = await self.find_existing_embed(channel)
+
+            if message:
                 await message.edit(embed=embed)
+                self.embed_message_id = message.id
             else:
                 message = await channel.send(embed=embed)
                 self.embed_message_id = message.id
-        except discord.errors.NotFound:
-            message = await channel.send(embed=embed)
-            self.embed_message_id = message.id
+
+            self.save_embed_id()
+
         except discord.errors.Forbidden:
             logging.error(f"Bot doesn't have permission to send/edit messages in channel {self.embed_channel_id}")
         except discord.errors.HTTPException as e:
