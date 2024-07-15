@@ -13,6 +13,13 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Attach config to bot
+bot.config = {
+    'API_ENDPOINT': API_ENDPOINT,
+    'INTERVAL': INTERVAL,
+    'CHANNEL_IDS': CHANNEL_IDS
+}
+
 # Remove the default help command
 bot.remove_command('help')
 

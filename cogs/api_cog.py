@@ -25,7 +25,7 @@ class APICog(commands.Cog):
 
     async def fetch_api_data(self):
         try:
-            async with self.session.get(self.bot.config.API_ENDPOINT) as response:
+            async with self.session.get(self.bot.config['API_ENDPOINT']) as response:
                 if response.status == 200:
                     data = await response.json()
                     return data
@@ -49,7 +49,7 @@ class APICog(commands.Cog):
         avg_price = statistics.mean(self.price_history)
         return "↑" if current_price >= avg_price else "↓"
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=lambda: bot.config['INTERVAL'])
     async def update_data(self):
         try:
             logging.info("Fetching API data...")
