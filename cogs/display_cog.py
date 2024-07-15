@@ -43,6 +43,11 @@ class DisplayCog(commands.Cog):
         logging.info(f"Received percent of total supply update: {percent_total_supply_data}")
         await self.update_channel('percenttotalsupply', percent_total_supply_data)
 
+    @commands.Cog.listener()
+    async def on_active_smeshers_update(self, active_smeshers_data):
+        logging.info(f"Received active smeshers update: {active_smeshers_data}")
+        await self.update_channel('activesmeshers', active_smeshers_data)
+
     async def update_channel(self, channel_type, new_name):
         current_time = time.time()
         if current_time - self.last_update_time < 600:  # 10 minutes cooldown

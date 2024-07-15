@@ -94,6 +94,11 @@ class APICog(commands.Cog):
         percent_circulating = (circulating_supply / total_supply) * 100
         rounded_percent = round(percent_circulating, 2)
         return f"Circulating: {rounded_percent:.2f}%"
+    
+    @commands.Cog.listener()
+    async def on_percent_total_supply_update(self, percent_total_supply_data):
+        logging.info(f"Received percent of total supply update: {percent_total_supply_data}")
+        await self.update_channel('percenttotalsupply', percent_total_supply_data)
 
     @tasks.loop()
     async def update_data(self):
@@ -109,6 +114,7 @@ class APICog(commands.Cog):
                 netspace_data = self.process_netspace(data['effectiveUnitsCommited'])
                 market_cap_data = self.process_market_cap(data['price'], data['circulatingSupply'])
                 percent_total_supply_data = self.process_percent_total_supply(data['circulatingSupply'], data['totalVaulted'])
+                active_smeshers_data = self.process_active_smeshers(data['totalActiveSmeshers'])
 
                 logging.info(f"Dispatching updates: price={price_data}, layer={layer_data}, epoch={epoch_data}, circulating_supply={circulating_supply_data}")
                 self.bot.dispatch('price_update', price_data)
@@ -118,6 +124,7 @@ class APICog(commands.Cog):
                 self.bot.dispatch('netspace_update', netspace_data)
                 self.bot.dispatch('market_cap_update', market_cap_data)
                 self.bot.dispatch('percent_total_supply_update', percent_total_supply_data)
+                self.bot.dispatch('active_smeshers_update', active_smeshers_data)
             else:
                 logging.warning("Failed to fetch API data")
         except Exception as e:
