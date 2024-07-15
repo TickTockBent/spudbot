@@ -2,11 +2,15 @@ import discord
 from discord.ext import commands, tasks
 import json
 import os
+import logging
 
 class EmbedCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.embed_channel_id = self.bot.config['EMBED_CHANNEL_ID']
+        self.embed_channel_id = self.bot.config['CHANNEL_IDS'].get('embed')
+        if not self.embed_channel_id:
+            logging.error("Embed channel ID is not set in the config CHANNEL_IDS")
+            return
         self.embed_message_id = None
         self.load_message_id()
         self.update_embed.start()
@@ -29,11 +33,14 @@ class EmbedCog(commands.Cog):
     def generate_embed(self):
         embed = discord.Embed(title="Spacemesh Network Stats", color=0x00ff00)
         
-        # TODO: Add fields for each stat
-        embed.add_field(name="Price", value=f"${self.bot.get_cog('APICog').current_data['price']:.2f}", inline=True)
-        embed.add_field(name="Layer", value=str(self.bot.get_cog('APICog').current_data['layer']), inline=True)
-        embed.add_field(name="Epoch", value=str(self.bot.get_cog('APICog').current_data['epoch']), inline=True)
-        
+        api_cog = self.bot.get_cog('APICog')
+        if api_cog and api_cog.current_data:
+            embed.add_field(name="Price", value=f"${api_cog.current_data['price']:.2f}", inline=True)
+            embed.add_field(name="Layer", value=str(api_cog.current_data['layer']), inline=True)
+            embed.add_field(name="Epoch", value=str(api_cog.current_data['epoch']), inline=True)
+            # Add more fields as needed
+        else:
+            embed.add_field(name="Error", value="Unable to fetch current data", inline=False)
         
         embed.set_footer(text=f"Last updated: {discord.utils.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
         return embed
@@ -41,7 +48,7 @@ class EmbedCog(commands.Cog):
     async def create_or_update_embed(self):
         channel = self.bot.get_channel(self.embed_channel_id)
         if not channel:
-            print(f"Couldn't find channel with ID {self.embed_channel_id}")
+            logging.error(f"Couldn't find channel with ID {self.embed_channel_id}")
             return
 
         embed = self.generate_embed()
@@ -59,9 +66,9 @@ class EmbedCog(commands.Cog):
             self.embed_message_id = message.id
             self.save_message_id()
         except discord.errors.Forbidden:
-            print(f"Bot doesn't have permission to send/edit messages in channel {self.embed_channel_id}")
+            logging.error(f"Bot doesn't have permission to send/edit messages in channel {self.embed_channel_id}")
         except discord.errors.HTTPException as e:
-            print(f"Failed to send/edit message: {e}")
+            logging.error(f"Failed to send/edit message: {e}")
 
     @tasks.loop(minutes=5)
     async def update_embed(self):
@@ -72,4 +79,7 @@ class EmbedCog(commands.Cog):
         await self.bot.wait_until_ready()
 
 async def setup(bot):
+    if 'embed' not in bot.config['CHANNEL_IDS']:
+        logging.error("Embed channel ID is not set in the config CHANNEL_IDS. EmbedCog will not be loaded.")
+        return
     await bot.add_cog(EmbedCog(bot))
