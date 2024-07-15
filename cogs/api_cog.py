@@ -95,6 +95,11 @@ class APICog(commands.Cog):
         rounded_percent = round(percent_circulating, 2)
         return f"Circulating: {rounded_percent:.2f}%"
     
+    def process_active_smeshers(self, total_active_smeshers):
+        # Convert to millions and round to 1 decimal place
+        active_smeshers_millions = round(total_active_smeshers / 1_000_000, 1)
+        return f"Activations: {active_smeshers_millions:.1f}M"
+    
     @commands.Cog.listener()
     async def on_percent_total_supply_update(self, percent_total_supply_data):
         logging.info(f"Received percent of total supply update: {percent_total_supply_data}")
