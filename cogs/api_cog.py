@@ -3,6 +3,7 @@ from collections import deque
 from discord.ext import commands, tasks
 import statistics
 import logging
+import asyncio
 
 class APICog(commands.Cog):
     def __init__(self, bot):
@@ -13,10 +14,14 @@ class APICog(commands.Cog):
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
+        self.update_data.start()
+        logging.info("APICog loaded and update loop started")
 
     async def cog_unload(self):
+        self.update_data.cancel()
         if self.session:
             await self.session.close()
+        logging.info("APICog unloaded and update loop cancelled")
 
     async def fetch_api_data(self):
         try:
@@ -47,10 +52,12 @@ class APICog(commands.Cog):
     @tasks.loop(minutes=5)
     async def update_data(self):
         try:
+            logging.info("Fetching API data...")
             data = await self.fetch_api_data()
             if data:
                 self.current_data = data
                 price_data = self.process_price(data['price'])
+                logging.info(f"Dispatching price update: {price_data}")
                 self.bot.dispatch('price_update', price_data)
             else:
                 logging.warning("Failed to fetch API data")
@@ -60,6 +67,7 @@ class APICog(commands.Cog):
     @update_data.before_loop
     async def before_update_data(self):
         await self.bot.wait_until_ready()
+        logging.info("Starting update_data loop")
 
 async def setup(bot):
     await bot.add_cog(APICog(bot))
