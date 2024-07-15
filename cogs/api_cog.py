@@ -19,9 +19,8 @@ class APICog(commands.Cog):
             await self.session.close()
 
     async def fetch_api_data(self):
-        api_url = "https://spacemesh-api-v2.swarmbit.io/network/info"
         try:
-            async with self.session.get(api_url) as response:
+            async with self.session.get(self.bot.config.API_ENDPOINT) as response:
                 if response.status == 200:
                     data = await response.json()
                     return data
