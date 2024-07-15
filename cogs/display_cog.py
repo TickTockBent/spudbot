@@ -48,26 +48,30 @@ class DisplayCog(commands.Cog):
         logging.info(f"Received active smeshers update: {active_smeshers_data}")
         await self.update_channel('activesmeshers', active_smeshers_data)
 
-    async def update_channel(self, channel_type, new_name):
-        current_time = time.time()
-        if current_time - self.last_update_time < 600:  # 10 minutes cooldown
-            logging.info("Skipping update due to cooldown")
-            return
+async def update_channel(self, channel_type, new_name):
+    current_time = time.time()
+    if current_time - self.last_update_time < 600:  # 10 minutes cooldown
+        logging.info("Skipping update due to cooldown")
+        return
 
-        channel_id = self.bot.config['CHANNEL_IDS'][channel_type]
-        channel = self.bot.get_channel(channel_id)
-        
-        if channel:
-            try:
+    channel_id = self.bot.config['CHANNEL_IDS'][channel_type]
+    channel = self.bot.get_channel(channel_id)
+    
+    if channel:
+        try:
+            # Check if the current name is different from the new name
+            if channel.name != new_name:
                 await channel.edit(name=new_name)
                 self.last_update_time = current_time
                 logging.info(f"Successfully updated {channel_type} channel name to: {new_name}")
-            except discord.errors.Forbidden:
-                logging.error(f"Bot doesn't have permission to edit channel {channel.id}")
-            except discord.errors.HTTPException as e:
-                logging.error(f"Failed to update channel name: {e}")
-        else:
-            logging.error(f"Couldn't find channel with ID {channel_id}")
+            else:
+                logging.info(f"Skipping update for {channel_type}, no change detected")
+        except discord.errors.Forbidden:
+            logging.error(f"Bot doesn't have permission to edit channel {channel.id}")
+        except discord.errors.HTTPException as e:
+            logging.error(f"Failed to update channel name: {e}")
+    else:
+        logging.error(f"Couldn't find channel with ID {channel_id}")
 
     async def update_price_channel(self, price_data):
         new_name = f"Price: {price_data['formatted_price']} {price_data['trend']}"
