@@ -77,5 +77,9 @@ class DisplayCog(commands.Cog):
             new_name = f"Price: {price_data['formatted_price']} {price_data['trend']}"
             await self.update_channel('price', new_name)
 
+    async def update_price_channel(self, price_data):
+        new_name = f"Price: {price_data['formatted_price']} {price_data['trend']}"
+        await self.update_channel('price', new_name)
+
 async def setup(bot):
     await bot.add_cog(DisplayCog(bot))
