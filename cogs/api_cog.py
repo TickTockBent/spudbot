@@ -88,6 +88,12 @@ class APICog(commands.Cog):
         market_cap_millions = round(market_cap_smh / 1_000_000, 2)
         
         return f"Market Cap: ${market_cap_millions:.2f}M"
+    
+    def process_percent_total_supply(self, circulating_supply, total_vaulted):
+        total_supply = circulating_supply + total_vaulted
+        percent_circulating = (circulating_supply / total_supply) * 100
+        rounded_percent = round(percent_circulating, 2)
+        return f"Circulating: {rounded_percent:.2f}%"
 
     @tasks.loop()
     async def update_data(self):
@@ -102,6 +108,7 @@ class APICog(commands.Cog):
                 circulating_supply_data = self.process_circulating_supply(data['circulatingSupply'])
                 netspace_data = self.process_netspace(data['effectiveUnitsCommited'])
                 market_cap_data = self.process_market_cap(data['price'], data['circulatingSupply'])
+                percent_total_supply_data = self.process_percent_total_supply(data['circulatingSupply'], data['totalVaulted'])
 
                 logging.info(f"Dispatching updates: price={price_data}, layer={layer_data}, epoch={epoch_data}, circulating_supply={circulating_supply_data}")
                 self.bot.dispatch('price_update', price_data)
@@ -110,6 +117,7 @@ class APICog(commands.Cog):
                 self.bot.dispatch('circulating_supply_update', circulating_supply_data)
                 self.bot.dispatch('netspace_update', netspace_data)
                 self.bot.dispatch('market_cap_update', market_cap_data)
+                self.bot.dispatch('percent_total_supply_update', percent_total_supply_data)
             else:
                 logging.warning("Failed to fetch API data")
         except Exception as e:

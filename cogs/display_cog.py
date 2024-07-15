@@ -38,6 +38,11 @@ class DisplayCog(commands.Cog):
         logging.info(f"Received market cap update: {market_cap_data}")
         await self.update_channel('marketcap', market_cap_data)
 
+    @commands.Cog.listener()
+    async def on_percent_total_supply_update(self, percent_total_supply_data):
+        logging.info(f"Received percent of total supply update: {percent_total_supply_data}")
+        await self.update_channel('percenttotalsupply', percent_total_supply_data)
+
     async def update_channel(self, channel_type, new_name):
         current_time = time.time()
         if current_time - self.last_update_time < 600:  # 10 minutes cooldown
