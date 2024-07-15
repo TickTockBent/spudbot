@@ -48,8 +48,11 @@ class APICog(commands.Cog):
             return "↑"
         avg_price = statistics.mean(self.price_history)
         return "↑" if current_price >= avg_price else "↓"
+    
+    def get_update_interval(self):
+        return self.bot.config['INTERVAL']
 
-    @tasks.loop(seconds=lambda: bot.config['INTERVAL'])
+    @tasks.loop(seconds=get_update_interval)
     async def update_data(self):
         try:
             logging.info("Fetching API data...")
