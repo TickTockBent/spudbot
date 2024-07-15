@@ -35,6 +35,9 @@ class GraphCog(commands.Cog):
             return "DataCog not available"
 
         data = data_cog.get_data('price', hours=12)
+        if not data:
+            return "No price data available"
+
         graph = self.generate_graph(data)
         
         # Calculate 24h trend
@@ -47,7 +50,10 @@ class GraphCog(commands.Cog):
             trend_percent = 0
             trend_arrow = "-"
 
-        return f"Price (USD) Last 12 Hours\n```\n{graph}\n```\n24h Trend: {trend_arrow} {abs(trend_percent):.2f}%"
+        min_price = min(price for _, price in data)
+        max_price = max(price for _, price in data)
+
+        return f"Price (USD) Last 12 Hours\n```\n{max_price:.2f} |\n{graph}\n{min_price:.2f} |\n```\n24h Trend: {trend_arrow} {abs(trend_percent):.2f}%"
 
     def get_netspace_graph(self):
         data_cog = self.bot.get_cog('DataCog')
@@ -55,9 +61,15 @@ class GraphCog(commands.Cog):
             return "DataCog not available"
 
         data = data_cog.get_data('netspace', hours=24*30)  # Last 30 days
+        if not data:
+            return "No netspace data available"
+
         graph = self.generate_graph(data)
 
-        return f"Netspace (PiB) Last 30 Days\n```\n{graph}\n```"
+        min_netspace = min(netspace for _, netspace in data)
+        max_netspace = max(netspace for _, netspace in data)
+
+        return f"Netspace (PiB) Last 30 Days\n```\n{max_netspace:.2f} |\n{graph}\n{min_netspace:.2f} |\n```"
 
 async def setup(bot):
     await bot.add_cog(GraphCog(bot))

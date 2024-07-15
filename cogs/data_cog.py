@@ -43,7 +43,15 @@ class DataCog(commands.Cog):
     async def collect_data(self, metric_type):
         api_cog = self.bot.get_cog('APICog')
         if api_cog and api_cog.current_data:
-            value = api_cog.current_data['price'] if metric_type == 'price' else api_cog.current_data['effectiveUnitsCommited']
+            if metric_type == 'price':
+                value = api_cog.current_data['price']
+            elif metric_type == 'netspace':
+                # Convert smeshing units to PiB
+                value = api_cog.current_data['effectiveUnitsCommited'] * 64 / (1024 * 1024)  # 64 GiB per unit, convert to PiB
+            else:
+                logging.error(f"Unknown metric type: {metric_type}")
+                return
+
             cursor = self.conn.cursor()
             cursor.execute('INSERT INTO data_points (metric_type, value) VALUES (?, ?)', (metric_type, value))
             self.conn.commit()
@@ -59,6 +67,11 @@ class DataCog(commands.Cog):
             ORDER BY timestamp
         ''', (metric_type, hours))
         return cursor.fetchall()
+
+    @price_collection_task.before_loop
+    @netspace_collection_task.before_loop
+    async def before_collection_tasks(self):
+        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(DataCog(bot))
