@@ -33,7 +33,8 @@ async def on_ready():
 initial_cogs = [
     'cogs.api_cog',
     'cogs.display_cog',
-    'cogs.general_cog'
+    'cogs.general_cog',
+    'cogs.embed_cog'
 ]
 
 async def load_cogs():
