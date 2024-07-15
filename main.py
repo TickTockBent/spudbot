@@ -1,5 +1,6 @@
 import asyncio
 import discord
+from discord import app_commands
 from discord.ext import commands
 import logging
 from config import BOT_TOKEN
@@ -12,10 +13,20 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# Remove the default help command
+bot.remove_command('help')
+
+@bot.event
+async def on_ready():
+    logging.info(f'Bot logged in as {bot.user}')
+    await load_cogs()
+    await bot.tree.sync()  # Sync slash commands
+
 # Load cogs
 initial_cogs = [
     'cogs.api_cog',
-    'cogs.display_cog'
+    'cogs.display_cog',
+    'cogs.general_cog'
 ]
 
 async def load_cogs():
@@ -25,11 +36,6 @@ async def load_cogs():
             logging.info(f'Loaded cog: {cog}')
         except Exception as e:
             logging.error(f'Failed to load cog {cog}: {str(e)}')
-
-@bot.event
-async def on_ready():
-    logging.info(f'Bot logged in as {bot.user}')
-    await load_cogs()
 
 # Run the bot
 if __name__ == "__main__":
