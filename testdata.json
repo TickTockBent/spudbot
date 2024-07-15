@@ -1,20 +1,23 @@
 {
-    "epoch": 9,
-    "layer": 39305,
-    "effectiveUnitsCommited": 1311946,
-    "epochSubsidy": 1913435019798900,
+    "epoch": 26,
+    "layer": 105751,
+    "effectiveUnitsCommited": 90265237,
+    "epochSubsidy": 1885795783411508,
     "totalSlots": 201600,
-    "totalWeight": 12151433597,
-    "circulatingSupply": 14780323079380311,
-    "price": -1,
-    "marketCap": 18431963750630171304,
-    "totalAccounts": 10793,
-    "totalActiveSmeshers": 83405,
-    "atxHex": "000012be1101387decb832cf3051a2d307a8e8cb12cf49a4a9a3a1aa4d9e5b40",
-    "atxBase64": "AAASvhEBOH3suDLPMFGi0weo6MsSz0mkqaOhqk2eW0A=",
+    "totalWeight": 834783824897,
+    "circulatingSupply": 46369169758319293,
+    "rewards": 46069036577192962,
+    "price": 1.075,
+    "marketCap": 49524214320482432,
+    "totalAccounts": 31213,
+    "totalActiveSmeshers": 6344861,
+    "atxHex": "",
+    "atxBase64": "",
+    "vested": 300133181126331,
+    "totalVaulted": 150000000000000000,
     "nextEpoch": {
-        "epoch": 10,
-        "effectiveUnitsCommited": 1631884,
-        "totalActiveSmeshers": 99367
+        "epoch": 27,
+        "effectiveUnitsCommited": 1392,
+        "totalActiveSmeshers": 3
     }
 }
