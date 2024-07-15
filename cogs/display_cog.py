@@ -22,7 +22,7 @@ class DisplayCog(commands.Cog):
         new_name = f"Price: {price_data['formatted_price']} {price_data['trend']}"
         logging.info(f"Attempting to update channel name to: {new_name}")
 
-        price_channel_id = self.bot.config.CHANNEL_IDS['price']
+        price_channel_id = self.bot.config['CHANNEL_IDS']['price']
         channel = self.bot.get_channel(price_channel_id)
         
         if channel:
