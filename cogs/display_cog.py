@@ -28,6 +28,11 @@ class DisplayCog(commands.Cog):
         logging.info(f"Received circulating supply update: {circulating_supply_data}")
         await self.update_channel('circulatingsupply', f"Circulating Supply: {circulating_supply_data}")
 
+    @commands.Cog.listener()
+    async def on_netspace_update(self, netspace_data):
+        logging.info(f"Received netspace update: {netspace_data}")
+        await self.update_channel('networksize', netspace_data)
+
     async def update_channel(self, channel_type, new_name):
         current_time = time.time()
         if current_time - self.last_update_time < 600:  # 10 minutes cooldown

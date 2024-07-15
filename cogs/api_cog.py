@@ -63,6 +63,19 @@ class APICog(commands.Cog):
         # Round to two decimal places (not rounding up, just normal rounding)
         rounded_millions_smh = round(millions_smh, 2)
         return f"{rounded_millions_smh:.2f}M SMH"
+    
+    def process_netspace(self, effective_units_committed):
+        # Convert SU to bytes
+        bytes_per_su = 64 * 1024 * 1024 * 1024  # 64 GiB in bytes
+        total_bytes = effective_units_committed * bytes_per_su
+        
+        # Convert bytes to EiB
+        eib = total_bytes / (1024 ** 6)  # 1 EiB = 1024^6 bytes
+        
+        # Round to two decimal places
+        rounded_eib = round(eib, 2)
+        
+        return f"Netspace: {rounded_eib:.2f}EiB"
 
     @tasks.loop()
     async def update_data(self):
@@ -75,12 +88,14 @@ class APICog(commands.Cog):
                 layer_data = self.process_layer(data['layer'])
                 epoch_data = self.process_epoch(data['epoch'])
                 circulating_supply_data = self.process_circulating_supply(data['circulatingSupply'])
-                
+                netspace_data = self.process_netspace(data['effectiveUnitsCommited'])
+
                 logging.info(f"Dispatching updates: price={price_data}, layer={layer_data}, epoch={epoch_data}, circulating_supply={circulating_supply_data}")
                 self.bot.dispatch('price_update', price_data)
                 self.bot.dispatch('layer_update', layer_data)
                 self.bot.dispatch('epoch_update', epoch_data)
                 self.bot.dispatch('circulating_supply_update', circulating_supply_data)
+                self.bot.dispatch('netspace_update', netspace_data)
             else:
                 logging.warning("Failed to fetch API data")
         except Exception as e:
