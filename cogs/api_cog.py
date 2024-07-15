@@ -58,9 +58,9 @@ class APICog(commands.Cog):
 
     def process_circulating_supply(self, supply):
         # Convert smidge to millions of SMH
-        smh = supply / 1_000_000  # Convert smidge to SMH
+        smh = supply / 1_000_000_000  # Convert smidge to SMH (1 SMH = 1 billion smidge)
         millions_smh = smh / 1_000_000  # Convert SMH to millions of SMH
-        # Round up to two decimal places
+        # Round to two decimal places (not rounding up, just normal rounding)
         rounded_millions_smh = round(millions_smh, 2)
         return f"{rounded_millions_smh:.2f}M SMH"
 
