@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import logging
-from config import BOT_TOKEN
+import config  # Import the entire config module
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -15,9 +15,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Attach config to bot
 bot.config = {
-    'API_ENDPOINT': API_ENDPOINT,
-    'INTERVAL': INTERVAL,
-    'CHANNEL_IDS': CHANNEL_IDS
+    'API_ENDPOINT': config.API_ENDPOINT,
+    'INTERVAL': config.INTERVAL,
+    'CHANNEL_IDS': config.CHANNEL_IDS
 }
 
 # Remove the default help command
@@ -46,4 +46,4 @@ async def load_cogs():
 
 # Run the bot
 if __name__ == "__main__":
-    asyncio.run(bot.start(BOT_TOKEN))
+    asyncio.run(bot.start(config.BOT_TOKEN))
