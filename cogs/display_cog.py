@@ -26,7 +26,7 @@ class DisplayCog(commands.Cog):
     @commands.Cog.listener()
     async def on_circulating_supply_update(self, circulating_supply_data):
         logging.info(f"Received circulating supply update: {circulating_supply_data}")
-        await self.update_channel('circulatingsupply', f"Circulating Supply: {circulating_supply_data}")
+        await self.update_channel('circulatingsupply', f"Circ. Supply: {circulating_supply_data}")
 
     @commands.Cog.listener()
     async def on_netspace_update(self, netspace_data):
