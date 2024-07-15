@@ -1,41 +1,35 @@
 import asyncio
 import discord
-from discord.ext import tasks
-import json
+from discord.ext import commands
 import logging
-import config
+from config import BOT_TOKEN
 
-client = discord.Client(intents=discord.Intents.default())
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
-@tasks.loop(seconds=config.INTERVAL)
-async def main_loop():
-    try:
-        data = await fetch_api_data()
-        parsed_data = parse_data(data)
-        await update_voice_channels(parsed_data)
-        await update_embedded_message(parsed_data)
-    except Exception as e:
-        logging.error(f"Error in main loop: {e}")
+# Create bot instance
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-async def fetch_api_data():
-    # TODO: Implement API data fetching
-    pass
+# Load cogs
+initial_cogs = [
+    'cogs.api_cog',
+    'cogs.display_cog'
+]
 
-def parse_data(data):
-    # TODO: Implement data parsing
-    pass
+async def load_cogs():
+    for cog in initial_cogs:
+        try:
+            await bot.load_extension(cog)
+            logging.info(f'Loaded cog: {cog}')
+        except Exception as e:
+            logging.error(f'Failed to load cog {cog}: {str(e)}')
 
-async def update_voice_channels(parsed_data):
-    # TODO: Implement voice channel updates
-    pass
-
-async def update_embedded_message(parsed_data):
-    # TODO: Implement embedded message update
-    pass
-
-@client.event
+@bot.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
-    main_loop.start()
+    logging.info(f'Bot logged in as {bot.user}')
+    await load_cogs()
 
-client.run(config.BOT_TOKEN)
+# Run the bot
+if __name__ == "__main__":
+    asyncio.run(bot.start(BOT_TOKEN))
