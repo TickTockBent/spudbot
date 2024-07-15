@@ -33,6 +33,11 @@ class DisplayCog(commands.Cog):
         logging.info(f"Received netspace update: {netspace_data}")
         await self.update_channel('networksize', netspace_data)
 
+    @commands.Cog.listener()
+    async def on_market_cap_update(self, market_cap_data):
+        logging.info(f"Received market cap update: {market_cap_data}")
+        await self.update_channel('marketcap', market_cap_data)
+
     async def update_channel(self, channel_type, new_name):
         current_time = time.time()
         if current_time - self.last_update_time < 600:  # 10 minutes cooldown

@@ -76,6 +76,18 @@ class APICog(commands.Cog):
         rounded_eib = round(eib, 2)
         
         return f"Netspace: {rounded_eib:.2f}EiB"
+    
+    def process_market_cap(self, price, circulating_supply):
+        # Convert circulating supply from smidge to SMH
+        smh_supply = circulating_supply / 1_000_000_000  # 1 SMH = 1 billion smidge
+        
+        # Calculate market cap in SMH
+        market_cap_smh = price * smh_supply
+        
+        # Convert to millions and round to 2 decimal places
+        market_cap_millions = round(market_cap_smh / 1_000_000, 2)
+        
+        return f"Market Cap: ${market_cap_millions:.2f}M"
 
     @tasks.loop()
     async def update_data(self):
@@ -89,6 +101,7 @@ class APICog(commands.Cog):
                 epoch_data = self.process_epoch(data['epoch'])
                 circulating_supply_data = self.process_circulating_supply(data['circulatingSupply'])
                 netspace_data = self.process_netspace(data['effectiveUnitsCommited'])
+                market_cap_data = self.process_market_cap(data['price'], data['circulatingSupply'])
 
                 logging.info(f"Dispatching updates: price={price_data}, layer={layer_data}, epoch={epoch_data}, circulating_supply={circulating_supply_data}")
                 self.bot.dispatch('price_update', price_data)
@@ -96,6 +109,7 @@ class APICog(commands.Cog):
                 self.bot.dispatch('epoch_update', epoch_data)
                 self.bot.dispatch('circulating_supply_update', circulating_supply_data)
                 self.bot.dispatch('netspace_update', netspace_data)
+                self.bot.dispatch('market_cap_update', market_cap_data)
             else:
                 logging.warning("Failed to fetch API data")
         except Exception as e:
