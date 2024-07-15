@@ -56,6 +56,14 @@ class APICog(commands.Cog):
         avg_price = statistics.mean(self.price_history)
         return "↑" if current_price >= avg_price else "↓"
 
+    def process_circulating_supply(self, supply):
+        # Convert smidge to millions of SMH
+        smh = supply / 1_000_000  # Convert smidge to SMH
+        millions_smh = smh / 1_000_000  # Convert SMH to millions of SMH
+        # Round up to two decimal places
+        rounded_millions_smh = round(millions_smh, 2)
+        return f"{rounded_millions_smh:.2f}M SMH"
+
     @tasks.loop()
     async def update_data(self):
         try:
@@ -64,10 +72,15 @@ class APICog(commands.Cog):
             if data:
                 self.current_data = data
                 price_data = self.process_price(data['price'])
-                logging.info(f"Dispatching price update: {price_data}")
+                layer_data = self.process_layer(data['layer'])
+                epoch_data = self.process_epoch(data['epoch'])
+                circulating_supply_data = self.process_circulating_supply(data['circulatingSupply'])
+                
+                logging.info(f"Dispatching updates: price={price_data}, layer={layer_data}, epoch={epoch_data}, circulating_supply={circulating_supply_data}")
                 self.bot.dispatch('price_update', price_data)
-                self.bot.dispatch('layer_update', self.process_layer(data['layer']))
-                self.bot.dispatch('epoch_update', self.process_epoch(data['epoch']))
+                self.bot.dispatch('layer_update', layer_data)
+                self.bot.dispatch('epoch_update', epoch_data)
+                self.bot.dispatch('circulating_supply_update', circulating_supply_data)
             else:
                 logging.warning("Failed to fetch API data")
         except Exception as e:
