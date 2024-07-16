@@ -39,27 +39,24 @@ class DataCog(commands.Cog):
 
     @tasks.loop(hours=24)
     async def netspace_collection_task(self):
-        await self.collect_data('netspace')
+        await self.collect_data('networksize')
 
     async def collect_data(self, metric_type):
         api_cog = self.bot.get_cog('APICog')
-        if api_cog and api_cog.current_data:
-            if metric_type == 'price':
-                value = api_cog.current_data['price']
-            elif metric_type == 'netspace':
-                # Convert smeshing units to PiB
-                value = api_cog.current_data['effectiveUnitsCommited'] * 64 / (1024 * 1024)  # 64 GiB per unit, convert to PiB
+        if api_cog and api_cog.processed_data:
+            value = api_cog.processed_data.get(metric_type)
+            if value is not None:
+                # Remove any non-numeric characters (like '$' or 'EiB') and convert to float
+                numeric_value = float(''.join(filter(lambda x: x.isdigit() or x == '.', value)))
+                cursor = self.conn.cursor()
+                cursor.execute('INSERT INTO data_points (metric_type, value) VALUES (?, ?)', (metric_type, numeric_value))
+                self.conn.commit()
+                logging.info(f"Collected {metric_type} data: {value}")
+                
+                if not self.initial_data_collected.is_set():
+                    self.initial_data_collected.set()
             else:
-                logging.error(f"Unknown metric type: {metric_type}")
-                return
-
-            cursor = self.conn.cursor()
-            cursor.execute('INSERT INTO data_points (metric_type, value) VALUES (?, ?)', (metric_type, value))
-            self.conn.commit()
-            logging.info(f"Collected {metric_type} data: {value}")
-            
-            if not self.initial_data_collected.is_set():
-                self.initial_data_collected.set()
+                logging.warning(f"Failed to collect {metric_type} data: Data not available")
         else:
             logging.warning(f"Failed to collect {metric_type} data: API data not available")
 

@@ -41,29 +41,29 @@ class APICog(commands.Cog):
         if not data:
             return None
 
-        if data_type == 'price':
-            return f"${data['price']:.2f}"
-        elif data_type == 'circulatingsupply':
-            return f"{data['circulatingSupply'] / 1e15:.2f}M SMH"
-        elif data_type == 'marketcap':
-            return f"${data['marketCap'] / 1e6:.2f}M"
-        elif data_type == 'epoch':
-            return str(data['epoch'])
-        elif data_type == 'layer':
-            return str(data['layer'])
-        elif data_type == 'networksize':
-            return f"{data['effectiveUnitsCommited'] * 64 / (1024 * 1024):.2f} EiB"
-        elif data_type == 'activesmeshers':
-            return f"{data['totalActiveSmeshers']:,}"
-        elif data_type == 'percenttotalsupply':
-            return f"{(data['circulatingSupply'] / 15_000_000_000_000_000) * 100:.2f}%"
-        elif data_type == 'effectiveunits':
-            return f"{data['effectiveUnitsCommited']:,}"
-        elif data_type == 'totalrewards':
-            return f"{data['rewards'] / 1e9:.2f} SMH"
-        elif data_type == 'totaltransactions':
-            return str(data.get('totalTransactions', 'N/A'))
-        return None
+        try:
+            if data_type == 'price':
+                return f"${data['price']:.2f}"
+            elif data_type == 'circulatingsupply':
+                return f"{data['circulatingSupply'] / 1e15:.2f}M SMH"
+            elif data_type == 'marketcap':
+                return f"${data['marketCap'] / 1e6:.2f}M"
+            elif data_type == 'epoch':
+                return str(data['epoch'])
+            elif data_type == 'layer':
+                return str(data['layer'])
+            elif data_type == 'networksize':
+                return f"{data['effectiveUnitsCommited'] * 64 / (1024 * 1024):.2f} EiB"
+            elif data_type == 'activesmeshers':
+                return f"{data['totalActiveSmeshers']:,}"
+            elif data_type == 'percenttotalsupply':
+                total_supply = 15_000_000_000  # 15 billion SMH
+                circulating_supply = data['circulatingSupply'] / 1e9  # Convert smidge to SMH
+                return f"{(circulating_supply / total_supply) * 100:.2f}%"
+            return None
+        except KeyError as e:
+            logging.error(f"KeyError processing {data_type}: {str(e)}")
+            return None
 
     async def start_update_loops(self):
         for data_type, interval in self.update_intervals.items():
@@ -86,7 +86,6 @@ class APICog(commands.Cog):
             logging.info(f"Fetching API data for {data_type}...")
             data = await self.fetch_api_data()
             if data:
-                self.current_data[data_type] = data.get(data_type)
                 processed = self.process_data(data, data_type)
                 if processed:
                     self.processed_data[data_type] = processed
