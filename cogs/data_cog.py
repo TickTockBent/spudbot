@@ -9,6 +9,7 @@ class DataCog(commands.Cog):
         self.db_path = 'spacemesh_data.db'
         self.conn = None
         self.setup_database()
+        self.initial_data_collected = asyncio.Event()
         self.price_collection_task.start()
         self.netspace_collection_task.start()
 
@@ -56,8 +57,11 @@ class DataCog(commands.Cog):
             cursor.execute('INSERT INTO data_points (metric_type, value) VALUES (?, ?)', (metric_type, value))
             self.conn.commit()
             logging.info(f"Collected {metric_type} data: {value}")
+            
+            if not self.initial_data_collected.is_set():
+                self.initial_data_collected.set()
         else:
-            logging.error(f"Failed to collect {metric_type} data: API data not available")
+            logging.warning(f"Failed to collect {metric_type} data: API data not available")
 
     def get_data(self, metric_type, hours=12):
         cursor = self.conn.cursor()
@@ -72,6 +76,9 @@ class DataCog(commands.Cog):
     @netspace_collection_task.before_loop
     async def before_collection_tasks(self):
         await self.bot.wait_until_ready()
+        api_cog = self.bot.get_cog('APICog')
+        if api_cog:
+            await api_cog.initial_data_fetched.wait()
 
 async def setup(bot):
     await bot.add_cog(DataCog(bot))

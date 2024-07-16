@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import logging
 import json
 import os
+import asyncio
 
 class EmbedCog(commands.Cog):
     def __init__(self, bot):
@@ -13,11 +14,21 @@ class EmbedCog(commands.Cog):
             return
         self.embed_message_id = None
         self.load_message_id()
+
+    async def cog_load(self):
+        await self.wait_for_initial_data()
         self.update_embed.start()
 
     def cog_unload(self):
         self.update_embed.cancel()
         self.save_message_id()
+
+    async def wait_for_initial_data(self):
+        data_cog = self.bot.get_cog('DataCog')
+        if data_cog:
+            await data_cog.initial_data_collected.wait()
+        else:
+            logging.error("DataCog not found")
 
     def load_message_id(self):
         try:
