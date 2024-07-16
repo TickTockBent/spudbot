@@ -13,7 +13,7 @@ class EmbedCog(commands.Cog):
             logging.error("Embed channel ID is not set in the config CHANNEL_IDS")
             return
         self.embed_message_id = None
-        self.load_message_id()
+        self.load_embed_id()
 
     async def cog_load(self):
         await self.wait_for_initial_data()
@@ -21,7 +21,7 @@ class EmbedCog(commands.Cog):
 
     def cog_unload(self):
         self.update_embed.cancel()
-        self.save_message_id()
+        self.save_embed_id()
 
     async def wait_for_initial_data(self):
         data_cog = self.bot.get_cog('DataCog')
@@ -30,7 +30,7 @@ class EmbedCog(commands.Cog):
         else:
             logging.error("DataCog not found")
 
-    def load_message_id(self):
+    def load_embed_id(self):
         try:
             with open('embed_data.json', 'r') as f:
                 data = json.load(f)
@@ -38,7 +38,7 @@ class EmbedCog(commands.Cog):
         except FileNotFoundError:
             self.embed_message_id = None
 
-    def save_message_id(self):
+    def save_embed_id(self):
         with open('embed_data.json', 'w') as f:
             json.dump({'message_id': self.embed_message_id}, f)
 
@@ -54,6 +54,12 @@ class EmbedCog(commands.Cog):
             embed.add_field(name="Price", value=f"${api_cog.current_data['price']:.2f}", inline=True)
             embed.add_field(name="Layer", value=str(api_cog.current_data['layer']), inline=True)
             embed.add_field(name="Epoch", value=str(api_cog.current_data['epoch']), inline=True)
+            embed.add_field(name="Circulating Supply", value=f"{api_cog.current_data['circulatingSupply'] / 1e9:.2f}B SMH", inline=True)
+            embed.add_field(name="Market Cap", value=f"${api_cog.current_data['marketCap'] / 1e6:.2f}M", inline=True)
+            embed.add_field(name="Network Size", value=f"{api_cog.current_data['effectiveUnitsCommited'] * 64 / 1024:.2f} PiB", inline=True)
+            embed.add_field(name="Active Smeshers", value=f"{api_cog.current_data['totalActiveSmeshers']:,}", inline=True)
+            percent_total_supply = (api_cog.current_data['circulatingSupply'] / 15_000_000_000_000_000) * 100
+            embed.add_field(name="% of Total Supply", value=f"{percent_total_supply:.2f}%", inline=True)
             
             if graph_cog:
                 price_result = graph_cog.get_price_graph()
@@ -63,14 +69,6 @@ class EmbedCog(commands.Cog):
                     files.append(price_file)
                 else:
                     embed.add_field(name="Price Graph", value=price_result, inline=False)
-
-                netspace_result = graph_cog.get_netspace_graph()
-                if isinstance(netspace_result, tuple):
-                    netspace_file, netspace_change = netspace_result
-                    embed.add_field(name="Netspace Graph", value=netspace_change, inline=False)
-                    files.append(netspace_file)
-                else:
-                    embed.add_field(name="Netspace Graph", value=netspace_result, inline=False)
         else:
             embed.add_field(name="Error", value="Unable to fetch current data", inline=False)
         
@@ -100,7 +98,7 @@ class EmbedCog(commands.Cog):
                 message = await channel.send(embed=embed, files=files)
                 self.embed_message_id = message.id
 
-            self.save_message_id()
+            self.save_embed_id()
 
         except discord.errors.Forbidden:
             logging.error(f"Bot doesn't have permission to send/edit messages in channel {self.embed_channel_id}")
