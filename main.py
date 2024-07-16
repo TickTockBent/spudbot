@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 # Attach config to bot
 bot.config = {
     'API_ENDPOINT': config.API_ENDPOINT,
-    'INTERVAL': config.INTERVAL,
+    'UPDATE_INTERVALS': config.UPDATE_INTERVALS,
     'CHANNEL_IDS': config.CHANNEL_IDS
 }
 
