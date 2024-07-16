@@ -6,21 +6,22 @@ import asyncio
 class APICog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.current_data = None
+        self.current_data = {}
+        self.processed_data = {}
         self.session = None
-        self.update_interval = self.bot.config['INTERVAL']
+        self.update_intervals = self.bot.config['UPDATE_INTERVALS']
         self.initial_data_fetched = asyncio.Event()
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
-        self.update_data.start()
-        logging.info("APICog loaded and update loop started")
+        self.start_update_loops()
+        logging.info("APICog loaded and update loops started")
 
     async def cog_unload(self):
-        self.update_data.cancel()
+        self.stop_update_loops()
         if self.session:
             await self.session.close()
-        logging.info("APICog unloaded and update loop cancelled")
+        logging.info("APICog unloaded and update loops cancelled")
 
     async def fetch_api_data(self):
         try:
@@ -35,26 +36,68 @@ class APICog(commands.Cog):
             logging.error(f"Error fetching API data: {str(e)}")
             return None
 
-    @tasks.loop()
-    async def update_data(self):
+    def process_data(self, data, data_type):
+        if not data:
+            return None
+
+        if data_type == 'price':
+            return f"${data['price']:.2f}"
+        elif data_type == 'circulatingsupply':
+            return f"{data['circulatingSupply'] / 1e15:.2f}M SMH"
+        elif data_type == 'marketcap':
+            return f"${data['marketCap'] / 1e6:.2f}M"
+        elif data_type == 'epoch':
+            return str(data['epoch'])
+        elif data_type == 'layer':
+            return str(data['layer'])
+        elif data_type == 'networksize':
+            return f"{data['effectiveUnitsCommited'] * 64 / (1024 * 1024):.2f} EiB"
+        elif data_type == 'activesmeshers':
+            return f"{data['totalActiveSmeshers']:,}"
+        elif data_type == 'percenttotalsupply':
+            return f"{(data['circulatingSupply'] / 15_000_000_000_000_000) * 100:.2f}%"
+        elif data_type == 'effectiveunits':
+            return f"{data['effectiveUnitsCommited']:,}"
+        elif data_type == 'totalrewards':
+            return f"{data['rewards'] / 1e9:.2f} SMH"
+        elif data_type == 'totaltransactions':
+            return str(data.get('totalTransactions', 'N/A'))
+        return None
+
+    def start_update_loops(self):
+        for data_type in self.update_intervals:
+            if data_type != 'default' and data_type != 'embed':
+                update_loop = tasks.loop(seconds=self.update_intervals[data_type])(self.update_data)
+                update_loop.start(data_type)
+
+    def stop_update_loops(self):
+        for task in asyncio.all_tasks(self.bot.loop):
+            if task.get_name().startswith('update_data'):
+                task.cancel()
+
+    async def update_data(self, data_type):
         try:
-            logging.info("Fetching API data...")
+            logging.info(f"Fetching API data for {data_type}...")
             data = await self.fetch_api_data()
             if data:
-                self.current_data = data
-                if not self.initial_data_fetched.is_set():
-                    self.initial_data_fetched.set()
-                logging.info("API data updated successfully")
+                self.current_data[data_type] = data.get(data_type)
+                processed = self.process_data(data, data_type)
+                if processed:
+                    self.processed_data[data_type] = processed
+                    if not self.initial_data_fetched.is_set():
+                        self.initial_data_fetched.set()
+                    logging.info(f"API data for {data_type} updated and processed successfully")
+                    self.bot.dispatch('data_update', data_type, processed)
+                else:
+                    logging.warning(f"Failed to process data for {data_type}")
             else:
-                logging.warning("Failed to fetch API data")
+                logging.warning(f"Failed to fetch API data for {data_type}")
         except Exception as e:
-            logging.error(f"Error updating data: {str(e)}")
+            logging.error(f"Error updating data for {data_type}: {str(e)}")
 
     @update_data.before_loop
     async def before_update_data(self):
         await self.bot.wait_until_ready()
-        self.update_data.change_interval(seconds=self.update_interval)
-        logging.info(f"Starting update_data loop with interval: {self.update_interval} seconds")
 
 async def setup(bot):
     await bot.add_cog(APICog(bot))
