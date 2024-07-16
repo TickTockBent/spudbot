@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands, tasks
 import logging
+import json
+import os
 
 class EmbedCog(commands.Cog):
     def __init__(self, bot):
@@ -10,7 +12,24 @@ class EmbedCog(commands.Cog):
             logging.error("Embed channel ID is not set in the config CHANNEL_IDS")
             return
         self.embed_message_id = None
+        self.load_message_id()
         self.update_embed.start()
+
+    def cog_unload(self):
+        self.update_embed.cancel()
+        self.save_message_id()
+
+    def load_message_id(self):
+        try:
+            with open('embed_data.json', 'r') as f:
+                data = json.load(f)
+                self.embed_message_id = data.get('message_id')
+        except FileNotFoundError:
+            self.embed_message_id = None
+
+    def save_message_id(self):
+        with open('embed_data.json', 'w') as f:
+            json.dump({'message_id': self.embed_message_id}, f)
 
     def generate_embed(self):
         embed = discord.Embed(title="Spacemesh Network Stats", color=0x00ff00)
@@ -60,8 +79,8 @@ class EmbedCog(commands.Cog):
                 try:
                     message = await channel.fetch_message(self.embed_message_id)
                     await message.edit(embed=embed)
+                    await message.remove_attachments(*message.attachments)
                     if files:
-                        await message.remove_attachments(message.attachments)
                         await message.add_files(*files)
                 except discord.errors.NotFound:
                     message = await channel.send(embed=embed, files=files)
@@ -69,6 +88,8 @@ class EmbedCog(commands.Cog):
             else:
                 message = await channel.send(embed=embed, files=files)
                 self.embed_message_id = message.id
+
+            self.save_message_id()
 
         except discord.errors.Forbidden:
             logging.error(f"Bot doesn't have permission to send/edit messages in channel {self.embed_channel_id}")
