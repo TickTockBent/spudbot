@@ -11,14 +11,15 @@ class APICog(commands.Cog):
         self.session = None
         self.update_intervals = self.bot.config['UPDATE_INTERVALS']
         self.initial_data_fetched = asyncio.Event()
+        self.update_loops = {}
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
-        self.start_update_loops()
+        await self.start_update_loops()
         logging.info("APICog loaded and update loops started")
 
     async def cog_unload(self):
-        self.stop_update_loops()
+        await self.stop_update_loops()
         if self.session:
             await self.session.close()
         logging.info("APICog unloaded and update loops cancelled")
@@ -64,16 +65,21 @@ class APICog(commands.Cog):
             return str(data.get('totalTransactions', 'N/A'))
         return None
 
-    def start_update_loops(self):
-        for data_type in self.update_intervals:
-            if data_type != 'default' and data_type != 'embed':
-                update_loop = tasks.loop(seconds=self.update_intervals[data_type])(self.update_data)
-                update_loop.start(data_type)
+    async def start_update_loops(self):
+        for data_type, interval in self.update_intervals.items():
+            if data_type not in ['default', 'embed']:
+                self.update_loops[data_type] = self.bot.loop.create_task(self.update_data_loop(data_type, interval))
 
-    def stop_update_loops(self):
-        for task in asyncio.all_tasks(self.bot.loop):
-            if task.get_name().startswith('update_data'):
-                task.cancel()
+    async def stop_update_loops(self):
+        for task in self.update_loops.values():
+            task.cancel()
+        await asyncio.gather(*self.update_loops.values(), return_exceptions=True)
+
+    async def update_data_loop(self, data_type, interval):
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed():
+            await self.update_data(data_type)
+            await asyncio.sleep(interval)
 
     async def update_data(self, data_type):
         try:
@@ -94,10 +100,6 @@ class APICog(commands.Cog):
                 logging.warning(f"Failed to fetch API data for {data_type}")
         except Exception as e:
             logging.error(f"Error updating data for {data_type}: {str(e)}")
-
-    @update_data.before_loop
-    async def before_update_data(self):
-        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(APICog(bot))

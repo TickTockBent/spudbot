@@ -15,23 +15,26 @@ class EmbedCog(commands.Cog):
         self.embed_message_id = None
         self.load_embed_id()
         self.current_data = {}
+        self.api_cog_ready = asyncio.Event()
 
     async def cog_load(self):
-        await self.wait_for_initial_data()
+        self.bot.loop.create_task(self.wait_for_api_cog())
         self.update_embed.start()
 
     def cog_unload(self):
         self.update_embed.cancel()
         self.save_embed_id()
 
-    async def wait_for_initial_data(self):
-        api_cog = self.bot.get_cog('APICog')
-        if api_cog:
-            logging.info("Waiting for initial API data...")
-            await api_cog.initial_data_fetched.wait()
-            logging.info("Initial API data received.")
-        else:
-            logging.error("APICog not found")
+    async def wait_for_api_cog(self):
+        while True:
+            api_cog = self.bot.get_cog('APICog')
+            if api_cog:
+                logging.info("APICog found, waiting for initial data...")
+                await api_cog.initial_data_fetched.wait()
+                self.api_cog_ready.set()
+                logging.info("Initial API data received.")
+                break
+            await asyncio.sleep(1)
 
     def load_embed_id(self):
         try:
@@ -93,6 +96,7 @@ class EmbedCog(commands.Cog):
     @update_embed.before_loop
     async def before_update_embed(self):
         await self.bot.wait_until_ready()
+        await self.api_cog_ready.wait()
 
 async def setup(bot):
     await bot.add_cog(EmbedCog(bot))
