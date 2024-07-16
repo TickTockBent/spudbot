@@ -69,7 +69,7 @@ class EmbedCog(commands.Cog):
             embed.add_field(name="Market Cap", value=f"${market_cap:.2f}M", inline=True)
             
             # Network size in EiB
-            network_size_gib = api_cog.current_data['effectiveUnitsCommited'] * 64  # Convert units to GiB
+            network_size_gib = api_cog.current_data['effectiveUnitsCommited'] * 64  # Convert SU to GiB
             network_size_eib = network_size_gib / (1024 * 1024)  # Convert GiB to EiB
             embed.add_field(name="Network Size", value=f"{network_size_eib:.2f} EiB", inline=True)
             
