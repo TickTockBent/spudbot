@@ -12,11 +12,13 @@ class EmbedCog(commands.Cog):
         self.embed_message_id = None
         self.update_embed.start()
 
-    async def generate_embed(self):
+    def generate_embed(self):
         embed = discord.Embed(title="Spacemesh Network Stats", color=0x00ff00)
         
         api_cog = self.bot.get_cog('APICog')
         graph_cog = self.bot.get_cog('GraphCog')
+        
+        files = []
         
         if api_cog and api_cog.current_data:
             embed.add_field(name="Price", value=f"${api_cog.current_data['price']:.2f}", inline=True)
@@ -24,19 +26,26 @@ class EmbedCog(commands.Cog):
             embed.add_field(name="Epoch", value=str(api_cog.current_data['epoch']), inline=True)
             
             if graph_cog:
-                price_file, price_trend = await graph_cog.get_price_graph()
-                netspace_file, netspace_change = await graph_cog.get_netspace_graph()
-                
-                embed.add_field(name="Price Graph", value=price_trend, inline=False)
-                embed.set_image(url="attachment://price_graph.png")
-                
-                embed.add_field(name="Netspace Graph", value=netspace_change, inline=False)
-                # Note: Discord embeds can only have one image, so we'll add the netspace graph as a separate message
+                price_result = graph_cog.get_price_graph()
+                if isinstance(price_result, tuple):
+                    price_file, price_trend = price_result
+                    embed.add_field(name="Price Graph", value=price_trend, inline=False)
+                    files.append(price_file)
+                else:
+                    embed.add_field(name="Price Graph", value=price_result, inline=False)
+
+                netspace_result = graph_cog.get_netspace_graph()
+                if isinstance(netspace_result, tuple):
+                    netspace_file, netspace_change = netspace_result
+                    embed.add_field(name="Netspace Graph", value=netspace_change, inline=False)
+                    files.append(netspace_file)
+                else:
+                    embed.add_field(name="Netspace Graph", value=netspace_result, inline=False)
         else:
             embed.add_field(name="Error", value="Unable to fetch current data", inline=False)
         
         embed.set_footer(text=f"Last updated: {discord.utils.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
-        return embed, price_file, netspace_file
+        return embed, files
 
     async def create_or_update_embed(self):
         channel = self.bot.get_channel(self.embed_channel_id)
@@ -44,23 +53,21 @@ class EmbedCog(commands.Cog):
             logging.error(f"Couldn't find channel with ID {self.embed_channel_id}")
             return
 
-        embed, price_file, netspace_file = await self.generate_embed()
+        embed, files = self.generate_embed()
 
         try:
             if self.embed_message_id:
                 try:
                     message = await channel.fetch_message(self.embed_message_id)
                     await message.edit(embed=embed)
-                    await message.remove_attachments(message.attachments)
-                    await message.add_files(price_file)
-                    await channel.send(file=netspace_file)
+                    if files:
+                        await message.remove_attachments(message.attachments)
+                        await message.add_files(*files)
                 except discord.errors.NotFound:
-                    message = await channel.send(embed=embed, file=price_file)
-                    await channel.send(file=netspace_file)
+                    message = await channel.send(embed=embed, files=files)
                     self.embed_message_id = message.id
             else:
-                message = await channel.send(embed=embed, file=price_file)
-                await channel.send(file=netspace_file)
+                message = await channel.send(embed=embed, files=files)
                 self.embed_message_id = message.id
 
         except discord.errors.Forbidden:
