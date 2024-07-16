@@ -28,7 +28,10 @@ class GraphCog(commands.Cog):
             y1 = int((values[i-1] - min_val) / val_range * (height-1))
             y2 = int((values[i] - min_val) / val_range * (height-1))
 
-            if y1 == y2:
+            if x1 == x2:
+                # Handle case where timestamps are the same
+                graph[height-1-y2][x2] = '|'
+            elif y1 == y2:
                 graph[height-1-y1][x1:x2+1] = ['_'] * (x2-x1+1)
             else:
                 for x in range(x1, x2+1):
