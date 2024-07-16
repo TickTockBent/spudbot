@@ -57,8 +57,17 @@ class EmbedCog(commands.Cog):
             embed.add_field(name="Price", value=f"${api_cog.current_data['price']:.2f}", inline=True)
             embed.add_field(name="Layer", value=str(api_cog.current_data['layer']), inline=True)
             embed.add_field(name="Epoch", value=str(api_cog.current_data['epoch']), inline=True)
-            embed.add_field(name="Circulating Supply", value=f"{api_cog.current_data['circulatingSupply'] / 1e9:.2f}B SMH", inline=True)
-            embed.add_field(name="Market Cap", value=f"${api_cog.current_data['marketCap'] / 1e6:.2f}M", inline=True)
+            
+            # Correctly calculated and formatted circulating supply
+            circulating_supply_smh = api_cog.current_data['circulatingSupply'] / 1e9  # Convert smidge to SMH
+            circulating_supply_m = circulating_supply_smh / 1e6  # Convert to millions
+            embed.add_field(name="Circulating Supply", value=f"{circulating_supply_m:.2f}M SMH", inline=True)
+            
+            # Correctly calculated market cap
+            price = api_cog.current_data['price']
+            market_cap = (price * circulating_supply_smh) / 1e6  # Convert to millions
+            embed.add_field(name="Market Cap", value=f"${market_cap:.2f}M", inline=True)
+            
             embed.add_field(name="Network Size", value=f"{api_cog.current_data['effectiveUnitsCommited'] * 64 / 1024:.2f} PiB", inline=True)
             embed.add_field(name="Active Smeshers", value=f"{api_cog.current_data['totalActiveSmeshers']:,}", inline=True)
             percent_total_supply = (api_cog.current_data['circulatingSupply'] / 15_000_000_000_000_000) * 100
