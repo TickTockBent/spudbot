@@ -6,6 +6,14 @@ class GraphCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    from discord.ext import commands
+import math
+from datetime import datetime, timedelta
+
+class GraphCog(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
     def generate_graph(self, data, width=24, height=8, is_price=True):
         if not data or len(data) < 2:
             return "Insufficient data for graph"
@@ -32,24 +40,20 @@ class GraphCog(commands.Cog):
                 # Handle case where timestamps are the same
                 graph[height-1-y2][x2] = '|'
             elif y1 == y2:
-                graph[height-1-y1][x1:x2+1] = ['_'] * (x2-x1+1)
+                graph[height-1-y1][x1:x2+1] = ['─'] * (x2-x1+1)
             else:
                 for x in range(x1, x2+1):
                     y = int(y1 + (y2-y1) * (x-x1) / (x2-x1))
-                    if x == x1:
-                        graph[height-1-y][x] = '/' if y2 > y1 else '\\'
-                    elif x == x2:
-                        graph[height-1-y][x] = '/' if y2 > y1 else '\\'
-                    else:
-                        graph[height-1-y][x] = '/' if y2 > y1 else '\\'
+                    char = '/' if y2 > y1 else '\\'  # '/' for rising, '\' for falling
+                    graph[height-1-y][x] = char
 
         # Add Y-axis labels
         y_labels = [f"{'$' if is_price else ''}{min_val + i * val_range / (height-1):.2f}" for i in range(height)]
         max_label_length = max(len(label) for label in y_labels)
-        graph_with_labels = [f"{y_labels[i]:>{max_label_length}} |{''.join(row)}" for i, row in enumerate(reversed(graph))]
+        graph_with_labels = [f"{y_labels[i]:>{max_label_length}} │{''.join(row)}" for i, row in enumerate(reversed(graph))]
 
         # Add X-axis
-        x_axis = f"{' ' * max_label_length} +{'-' * width}"
+        x_axis = f"{' ' * max_label_length} └{'─' * width}"
         graph_with_labels.append(x_axis)
 
         # Add X-axis labels
@@ -64,19 +68,19 @@ class GraphCog(commands.Cog):
         if not data_cog:
             return "DataCog not available"
 
-        data = data_cog.get_data('price', hours=1)
+        data = data_cog.get_data('price', hours=6)  # Last 6 hours
         if not data:
-            return "Price (USD) Last Hour\n```\nNo price data available yet\n```"
+            return "Price (USD) Last 6 Hours\n```\nNo price data available yet\n```"
 
-        graph = self.generate_graph(data, is_price=True)
+        graph = self.generate_graph(data, width=40, is_price=True)  # Width set to 40
         
-        # Calculate 24h trend
+        # Calculate 6h trend
         start_price = data[0][1]
         end_price = data[-1][1]
         trend_percent = ((end_price - start_price) / start_price) * 100
         trend_arrow = "▲" if trend_percent >= 0 else "▼"
 
-        return f"Price (USD) Last Hour\n```\n{graph}\n```\n24h Trend: {trend_arrow} {abs(trend_percent):.2f}%"
+        return f"Price (USD) Last 6 Hours\n```\n{graph}\n```\n6h Trend: {trend_arrow} {abs(trend_percent):.2f}%"
 
     def get_netspace_graph(self):
         data_cog = self.bot.get_cog('DataCog')
