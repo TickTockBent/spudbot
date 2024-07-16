@@ -24,11 +24,13 @@ class EmbedCog(commands.Cog):
         self.save_embed_id()
 
     async def wait_for_initial_data(self):
-        data_cog = self.bot.get_cog('DataCog')
-        if data_cog:
-            await data_cog.initial_data_collected.wait()
+        api_cog = self.bot.get_cog('APICog')
+        if api_cog:
+            logging.info("Waiting for initial API data...")
+            await api_cog.initial_data_fetched.wait()
+            logging.info("Initial API data received.")
         else:
-            logging.error("DataCog not found")
+            logging.error("APICog not found")
 
     def load_embed_id(self):
         try:
@@ -51,6 +53,7 @@ class EmbedCog(commands.Cog):
         files = []
         
         if api_cog and api_cog.current_data:
+            logging.info("Generating embed with current data")
             embed.add_field(name="Price", value=f"${api_cog.current_data['price']:.2f}", inline=True)
             embed.add_field(name="Layer", value=str(api_cog.current_data['layer']), inline=True)
             embed.add_field(name="Epoch", value=str(api_cog.current_data['epoch']), inline=True)
@@ -70,6 +73,7 @@ class EmbedCog(commands.Cog):
                 else:
                     embed.add_field(name="Price Graph", value=price_result, inline=False)
         else:
+            logging.warning("Unable to fetch current data for embed")
             embed.add_field(name="Error", value="Unable to fetch current data", inline=False)
         
         embed.set_footer(text=f"Last updated: {discord.utils.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
@@ -79,6 +83,11 @@ class EmbedCog(commands.Cog):
         channel = self.bot.get_channel(self.embed_channel_id)
         if not channel:
             logging.error(f"Couldn't find channel with ID {self.embed_channel_id}")
+            return
+
+        api_cog = self.bot.get_cog('APICog')
+        if not api_cog or not api_cog.current_data:
+            logging.warning("API data not available, skipping embed update")
             return
 
         embed, files = self.generate_embed()
@@ -99,6 +108,7 @@ class EmbedCog(commands.Cog):
                 self.embed_message_id = message.id
 
             self.save_embed_id()
+            logging.info("Embed updated successfully")
 
         except discord.errors.Forbidden:
             logging.error(f"Bot doesn't have permission to send/edit messages in channel {self.embed_channel_id}")
