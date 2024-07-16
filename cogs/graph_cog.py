@@ -64,9 +64,9 @@ class GraphCog(commands.Cog):
         if not data_cog:
             return "DataCog not available"
 
-        data = data_cog.get_data('price', hours=6)
+        data = data_cog.get_data('price', hours=1)
         if not data:
-            return "Price (USD) Last 6 Hours\n```\nNo price data available yet\n```"
+            return "Price (USD) Last Hour\n```\nNo price data available yet\n```"
 
         graph = self.generate_graph(data, is_price=True)
         
@@ -76,7 +76,7 @@ class GraphCog(commands.Cog):
         trend_percent = ((end_price - start_price) / start_price) * 100
         trend_arrow = "▲" if trend_percent >= 0 else "▼"
 
-        return f"Price (USD) Last 6 Hours\n```\n{graph}\n```\n24h Trend: {trend_arrow} {abs(trend_percent):.2f}%"
+        return f"Price (USD) Last Hour\n```\n{graph}\n```\n24h Trend: {trend_arrow} {abs(trend_percent):.2f}%"
 
     def get_netspace_graph(self):
         data_cog = self.bot.get_cog('DataCog')
