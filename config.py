@@ -1,5 +1,5 @@
 API_ENDPOINT = 'https://spacemesh-api-v2.swarmbit.io/network/info'
-
+DEBUG_MODE = True  # Set to False to disable debug output
 CHANNEL_IDS = {
     'price': 1174914635678359552,
     'circulatingsupply': 1174914741366423552,
