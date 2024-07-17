@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 from discord.ext import commands, tasks
 import config
+import json
 
 class APICog(commands.Cog):
     def __init__(self, bot):
@@ -16,6 +17,7 @@ class APICog(commands.Cog):
     @tasks.loop(minutes=5)
     async def fetch_data(self):
         """Fetch data from the API every 5 minutes."""
+        print(f"Attempting to fetch data from {config.API_ENDPOINT}")
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(config.API_ENDPOINT) as response:
@@ -23,6 +25,8 @@ class APICog(commands.Cog):
                         self.api_data = await response.json()
                         self.last_fetch_time = asyncio.get_event_loop().time()
                         print("API data fetched successfully")
+                        print("Sample of fetched data:")
+                        print(json.dumps(dict(list(self.api_data.items())[:5]), indent=2))  # Print first 5 items
                     else:
                         print(f"Failed to fetch API data. Status code: {response.status}")
         except Exception as e:
@@ -32,6 +36,7 @@ class APICog(commands.Cog):
     async def before_fetch_data(self):
         """Wait for the bot to be ready before starting the fetch loop."""
         await self.bot.wait_until_ready()
+        print("APICog is ready and will start fetching data.")
 
     def get_data(self):
         """Return the latest fetched API data."""
@@ -43,3 +48,4 @@ class APICog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(APICog(bot))
+    print("APICog has been loaded.")
