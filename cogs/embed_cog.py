@@ -75,14 +75,13 @@ class EmbedCog(commands.Cog):
                 if config.DEBUG_MODE:
                     print(f"Found embed channel with ID: {embed_channel_id}")
                 try:
-                    messages = await channel.history(limit=1).flatten()
-                    if messages:
-                        message = messages[0]
+                    async for message in channel.history(limit=1):
                         if config.DEBUG_MODE:
                             print("Updating existing embed message")
                         await message.edit(embed=embed)
                         if config.DEBUG_MODE:
                             print("Embed updated successfully")
+                        break
                     else:
                         if config.DEBUG_MODE:
                             print("No existing message found. Sending new embed message")
