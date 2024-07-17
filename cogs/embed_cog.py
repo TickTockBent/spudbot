@@ -104,7 +104,81 @@ class EmbedCog(commands.Cog):
             if config.DEBUG_MODE:
                 print(f"Embed channel with ID {embed_channel_id} not found")
 
-    # ... (rest of the methods remain the same)
+    def get_price_data(self):
+        conn = sqlite3.connect('spacemesh_data.db')
+        cursor = conn.cursor()
+        twelve_hours_ago = (datetime.now() - timedelta(hours=12)).isoformat()
+        cursor.execute("SELECT timestamp, value FROM spacemesh_data WHERE data_type = 'price' AND timestamp > ? ORDER BY timestamp", (twelve_hours_ago,))
+        data = cursor.fetchall()
+        conn.close()
+        return data
+
+    def generate_graph(self, price_data):
+        if not price_data:
+            return "No price data available"
+
+        # Normalize the data to fit in the graph
+        prices = [price for _, price in price_data]
+        min_price, max_price = min(prices), max(prices)
+        normalized_prices = [int((price - min_price) / (max_price - min_price) * 5) for price in prices]
+
+        # Generate the graph
+        graph = [" " * 40 for _ in range(6)]
+        for i, height in enumerate(normalized_prices):
+            for j in range(height + 1):
+                graph[5 - j] = graph[5 - j][:i] + "│" + graph[5 - j][i+1:]
+
+        # Add price labels
+        graph = [f"${price:.2f} │" + line for price, line in zip(reversed(prices[:6]), graph)]
+
+        # Add time labels
+        time_labels = ["Now", "3h", "6h", "9h", "12h"]
+        graph.append("      " + "─" * 40)
+        graph.append("      " + "   ".join(time_labels).center(40))
+
+        return "\n".join(graph)
+
+    def calculate_trend(self, price_data):
+        if len(price_data) < 2:
+            return "N/A"
+
+        start_price = price_data[0][1]
+        end_price = price_data[-1][1]
+        percent_change = ((end_price - start_price) / start_price) * 100
+
+        if percent_change > 0:
+            return f"↑ {abs(percent_change):.2f}%"
+        elif percent_change < 0:
+            return f"↓ {abs(percent_change):.2f}%"
+        else:
+            return "→ 0.00%"
+
+    def format_epoch_stats(self, data):
+        return (f"• Epoch: {data['epoch']}\n"
+                f"• Layer: {data['layer']}\n"
+                f"• Netspace: {data['effectiveUnitsCommited']:.2f} EiB\n"
+                f"• Epoch Rewards: {data['epochSubsidy']:.2f}M SMH")
+
+    def format_network_stats(self, data):
+        return (f"• Total Rewards: {data['rewards']}\n"
+                f"• Circulating Supply: {data['circulatingSupply']:.2f}M SMH\n"
+                f"• Market Cap: ${data['marketCap']:.2f}M\n"
+                f"• Total Active Wallets: {data['totalAccounts']}\n"
+                f"• Activations: {data['totalActiveSmeshers']:.2f}M")
+
+    def format_vesting_stats(self, data):
+        vested_value = data['vested'] * data['price']
+        remaining_value = data['remainingVaulted'] * data['price']
+        return (f"• Total VC Coins Vested: {data['vested']:.2f}M SMH\n"
+                f"• Value of Vested Coins: ${vested_value:.2f}M\n"
+                f"• VC Coins to be Vested: {data['remainingVaulted']:.2f}M SMH\n"
+                f"• Value of Remaining VC Coins: ${remaining_value:.2f}M")
+
+    def format_next_epoch(self, data):
+        next_epoch = data['nextEpoch']
+        return (f"• Next Epoch: {next_epoch['epoch']}\n"
+                f"• Confirmed Space: {next_epoch['effectiveUnitsCommited']:.2f} EiB\n"
+                f"• Confirmed Activations: {next_epoch['totalActiveSmeshers']:.3f}M")
 
     @update_embed.before_loop
     async def before_update_embed(self):
