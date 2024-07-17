@@ -195,10 +195,11 @@ class EmbedCog(commands.Cog):
 
     def format_vesting_stats(self, data):
         vested_value = data['vested'] * data['price']
-        remaining_value = data['remainingVaulted'] * data['price']
+        remaining_vaulted = data['remainingVaulted'] / 1e6  # Convert to millions
+        remaining_value = remaining_vaulted * data['price']
         return (f"• Total VC Coins Vested: {data['vested']:.2f}M SMH\n"
                 f"• Value of Vested Coins: ${vested_value:.2f}M\n"
-                f"• VC Coins to be Vested: {data['remainingVaulted']:.2f}M SMH\n"
+                f"• VC Coins to be Vested: {remaining_vaulted:.2f}M SMH\n"
                 f"• Value of Remaining VC Coins: ${remaining_value:.2f}M")
 
     def format_next_epoch(self, data):
