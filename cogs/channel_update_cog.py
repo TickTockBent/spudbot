@@ -41,17 +41,27 @@ class ChannelUpdateCog(commands.Cog):
                 continue
 
             new_name = self.format_channel_name(channel_name, processed_data)
+            if config.DEBUG_MODE:
+                print(f"Checking channel {channel_name}:")
+                print(f"  Current name: {channel.name}")
+                print(f"  New name: {new_name}")
+
             if new_name != channel.name:
+                if config.DEBUG_MODE:
+                    print(f"  Updating channel name...")
                 try:
                     await channel.edit(name=new_name)
                     if config.DEBUG_MODE:
-                        print(f"Updated channel {channel_name} to: {new_name}")
+                        print(f"  Successfully updated channel {channel_name} to: {new_name}")
                 except discord.errors.Forbidden:
                     if config.DEBUG_MODE:
-                        print(f"No permission to update channel {channel_name}")
+                        print(f"  No permission to update channel {channel_name}")
                 except discord.errors.HTTPException as e:
                     if config.DEBUG_MODE:
-                        print(f"Failed to update channel {channel_name}: {str(e)}")
+                        print(f"  Failed to update channel {channel_name}: {str(e)}")
+            else:
+                if config.DEBUG_MODE:
+                    print(f"  Channel name is already up to date. Skipping update.")
 
     def format_channel_name(self, channel_name, data):
         if channel_name == 'price':
