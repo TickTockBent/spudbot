@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import config
+import asyncio
 
 class ChannelUpdateCog(commands.Cog):
     def __init__(self, bot):
@@ -21,11 +22,24 @@ class ChannelUpdateCog(commands.Cog):
                 print("DataCog not found. Unable to update channels.")
             return
 
-        processed_data = data_cog.get_processed_data()
+        # Wait for processed data to be available
+        for _ in range(12):  # Try for up to 1 minute (5 seconds * 12)
+            processed_data = data_cog.get_processed_data()
+            if processed_data:
+                break
+            if config.DEBUG_MODE:
+                print("Waiting for processed data...")
+            await asyncio.sleep(5)
+        
         if not processed_data:
             if config.DEBUG_MODE:
-                print("No processed data available. Skipping channel update.")
+                print("No processed data available after waiting. Skipping channel update.")
             return
+
+        if config.DEBUG_MODE:
+            print("Processed data received:")
+            for key, value in processed_data.items():
+                print(f"  {key}: {value}")
 
         guild = self.bot.get_guild(config.CATEGORY_ID)
         if not guild:
