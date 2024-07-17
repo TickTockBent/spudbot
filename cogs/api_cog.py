@@ -9,6 +9,7 @@ class APICog(commands.Cog):
         self.bot = bot
         self.api_data = {}
         self.last_fetch_time = None
+        self.data_available = asyncio.Event()
         self.fetch_data.start()
 
     def cog_unload(self):
@@ -27,7 +28,8 @@ class APICog(commands.Cog):
                         if config.DEBUG_MODE:
                             print("API data fetched successfully")
                             print("Sample of fetched data:")
-                            print(json.dumps(dict(list(self.api_data.items())[:5]), indent=2))  # Print first 5 items
+                            print(json.dumps(dict(list(self.api_data.items())[:5]), indent=2))
+                        self.data_available.set()  # Signal that new data is available
                     else:
                         if config.DEBUG_MODE:
                             print(f"Failed to fetch API data. Status code: {response.status}")
@@ -46,6 +48,13 @@ class APICog(commands.Cog):
 
     def get_last_fetch_time(self):
         return self.last_fetch_time
+
+    def has_valid_data(self):
+        return bool(self.api_data) and self.api_data.get('epoch') != '0'
+
+    async def wait_for_data(self):
+        await self.data_available.wait()
+        self.data_available.clear()  # Reset the event for the next cycle
 
 async def setup(bot):
     await bot.add_cog(APICog(bot))

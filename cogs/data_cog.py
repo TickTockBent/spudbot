@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import sqlite3
 from datetime import datetime, timedelta
 import config
+import asyncio
 
 class DataCog(commands.Cog):
     def __init__(self, bot):
@@ -13,18 +14,25 @@ class DataCog(commands.Cog):
     def cog_unload(self):
         self.process_data.cancel()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop()
     async def process_data(self):
         api_cog = self.bot.get_cog('APICog')
         if api_cog:
+            await api_cog.wait_for_data()  # Wait for the APICog to signal new data
+            
             raw_data = api_cog.get_data()
-            self.processed_data = self.convert_data(raw_data)
-            self.store_data(self.processed_data)
-            if config.DEBUG_MODE:
-                print("Data processed and stored successfully")
+            if api_cog.has_valid_data():
+                self.processed_data = self.convert_data(raw_data)
+                self.store_data(self.processed_data)
+                if config.DEBUG_MODE:
+                    print("Data processed and stored successfully")
+            else:
+                if config.DEBUG_MODE:
+                    print("Received invalid data from APICog")
         else:
             if config.DEBUG_MODE:
                 print("APICog not found. Unable to process data.")
+            await asyncio.sleep(60)  # Wait a bit before trying again
 
     def convert_data(self, raw_data):
         processed = {}
