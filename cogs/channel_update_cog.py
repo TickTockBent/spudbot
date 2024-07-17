@@ -41,14 +41,8 @@ class ChannelUpdateCog(commands.Cog):
             for key, value in processed_data.items():
                 print(f"  {key}: {value}")
 
-        guild = self.bot.get_guild(config.CATEGORY_ID)
-        if not guild:
-            if config.DEBUG_MODE:
-                print(f"Guild with ID {config.CATEGORY_ID} not found.")
-            return
-
         for channel_name, channel_id in config.CHANNEL_IDS.items():
-            channel = guild.get_channel(channel_id)
+            channel = self.bot.get_channel(channel_id)
             if not channel:
                 if config.DEBUG_MODE:
                     print(f"Channel with ID {channel_id} not found.")
