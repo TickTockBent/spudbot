@@ -63,7 +63,7 @@ class DataCog(commands.Cog):
                     f"(raw: {raw_data.get('circulatingSupply', 0)} Smidge)")
 
         rewards = int(raw_data.get('rewards', 0)) / 1e9  # Convert Smidge to SMH
-        processed['rewards'] = f"{round(rewards / 1e6, 2)}M"  # Convert to millions of SMH
+        processed['rewards'] = f"{round(rewards / 1e6, 2)}"  # Convert to millions of SMH
         debug_print('rewards', processed['rewards'], 
                     f"(raw: {raw_data.get('rewards', 0)} Smidge)")
 
