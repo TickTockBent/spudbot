@@ -42,6 +42,12 @@ class ChannelUpdateCog(commands.Cog):
                 print(f"  {key}: {value}")
 
         for channel_name, channel_id in config.CHANNEL_IDS.items():
+            # Skip the embed channel
+            if channel_name == 'embed':
+                if config.DEBUG_MODE:
+                    print(f"Skipping update for embed channel (ID: {channel_id})")
+                continue
+
             channel = self.bot.get_channel(channel_id)
             if not channel:
                 if config.DEBUG_MODE:
