@@ -48,7 +48,7 @@ class DataCog(commands.Cog):
         debug_print('layer', processed['layer'])
         
         euc = int(raw_data.get('effectiveUnitsCommited', 0))
-        processed['effectiveUnitsCommited'] = round((euc * 64) / (1024 * 1024), 2)  # Convert SU to EiB
+        processed['effectiveUnitsCommited'] = round((euc * 64) / (1024 * 1024 * 1024), 2)  # Convert SU to EiB
         debug_print('effectiveUnitsCommited', processed['effectiveUnitsCommited'], 
                     f"(raw: {euc} SU)")
 
