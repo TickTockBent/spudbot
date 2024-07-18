@@ -5,6 +5,11 @@ import sqlite3
 from datetime import datetime, timedelta
 import asyncio
 
+GENESIS_TIMESTAMP = datetime(2023, 7, 14, 8, 0, 0, tzinfo=datetime.timezone.utc)
+EPOCH_DURATION = timedelta(days=14)
+POET_CYCLE_DURATION = timedelta(days=13, hours=12)
+CYCLE_GAP_DURATION = timedelta(hours=12)
+
 class EventsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -31,18 +36,18 @@ class EventsCog(commands.Cog):
                     print("No processed data available. Skipping events update.")
                 return
 
-            await self.update_epoch_event(current_epoch_data)
-            await self.update_poet_cycle_event(current_epoch_data)
-            await self.update_cycle_gap_event(current_epoch_data)
+            current_epoch = int(current_epoch_data['epoch'])
+            await self.update_epoch_event(current_epoch)
+            await self.update_poet_cycle_event(current_epoch)
+            await self.update_cycle_gap_event(current_epoch)
 
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"An error occurred in the update_events method: {str(e)}")
 
-    async def update_epoch_event(self, current_epoch_data):
-        current_epoch = int(current_epoch_data['epoch'])
+    async def update_epoch_event(self, current_epoch):
         next_epoch = current_epoch + 1
-        next_epoch_start = self.calculate_next_epoch_start(current_epoch_data)
+        next_epoch_start = self.calculate_epoch_start(next_epoch)
         
         event_data = self.get_event_data('epoch')
         if event_data and event_data['associated_number'] == next_epoch:
@@ -53,9 +58,8 @@ class EventsCog(commands.Cog):
             event_id = await self.create_discord_event(f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start)
             self.store_event_data('epoch', event_id, next_epoch)
 
-    async def update_poet_cycle_event(self, current_epoch_data):
-        current_epoch_start = datetime.fromisoformat(current_epoch_data['epoch_start'])
-        next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch_start)
+    async def update_poet_cycle_event(self, current_epoch):
+        next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
         next_poet_cycle = self.calculate_poet_cycle_number(next_poet_cycle_start)
         
         event_data = self.get_event_data('poet_cycle')
@@ -67,36 +71,36 @@ class EventsCog(commands.Cog):
             event_id = await self.create_discord_event(f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start)
             self.store_event_data('poet_cycle', event_id, next_poet_cycle)
 
-    async def update_cycle_gap_event(self, current_epoch_data):
-        current_epoch_start = datetime.fromisoformat(current_epoch_data['epoch_start'])
-        next_cycle_gap_start = self.calculate_next_cycle_gap_start(current_epoch_start)
-        next_cycle_gap_end = next_cycle_gap_start + timedelta(hours=12)
+    async def update_cycle_gap_event(self, current_epoch):
+        next_cycle_gap_start = self.calculate_next_cycle_gap_start(current_epoch)
+        next_cycle_gap_end = next_cycle_gap_start + CYCLE_GAP_DURATION
+        next_poet_cycle = self.calculate_poet_cycle_number(next_cycle_gap_end)
         
         event_data = self.get_event_data('cycle_gap')
-        if event_data and event_data['associated_number'] == self.calculate_poet_cycle_number(next_cycle_gap_start):
+        if event_data and event_data['associated_number'] == next_poet_cycle:
             # Event already exists, update if necessary
             await self.update_discord_event(event_data['event_id'], "Cycle Gap", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
         else:
             # Create new event
             event_id = await self.create_discord_event("Cycle Gap", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
-            self.store_event_data('cycle_gap', event_id, self.calculate_poet_cycle_number(next_cycle_gap_start))
+            self.store_event_data('cycle_gap', event_id, next_poet_cycle)
 
-    def calculate_next_epoch_start(self, current_epoch_data):
-        current_epoch_start = datetime.fromisoformat(current_epoch_data['epoch_start'])
-        return current_epoch_start + timedelta(days=14)
+    def calculate_epoch_start(self, epoch_number):
+        return GENESIS_TIMESTAMP + (epoch_number - 1) * EPOCH_DURATION
 
-    def calculate_next_poet_cycle_start(self, current_epoch_start):
-        days_since_poet_cycle = (current_epoch_start - datetime(2023, 7, 8, 8, 0, 0, tzinfo=datetime.timezone.utc)).days % 14
-        return current_epoch_start + timedelta(days=14-days_since_poet_cycle)
+    def calculate_next_poet_cycle_start(self, current_epoch):
+        current_time = datetime.now(datetime.timezone.utc)
+        poet_cycles_since_genesis = (current_time - GENESIS_TIMESTAMP) // POET_CYCLE_DURATION
+        next_poet_cycle_start = GENESIS_TIMESTAMP + (poet_cycles_since_genesis + 1) * POET_CYCLE_DURATION
+        return next_poet_cycle_start
 
-    def calculate_next_cycle_gap_start(self, current_epoch_start):
-        next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch_start)
-        return next_poet_cycle_start - timedelta(hours=12)
+    def calculate_next_cycle_gap_start(self, current_epoch):
+        next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
+        return next_poet_cycle_start - CYCLE_GAP_DURATION
 
     def calculate_poet_cycle_number(self, date):
-        base_date = datetime(2023, 7, 8, 8, 0, 0, tzinfo=datetime.timezone.utc)
-        days_since_base = (date - base_date).days
-        return (days_since_base // 14) + 1
+        poet_cycles_since_genesis = (date - GENESIS_TIMESTAMP) // POET_CYCLE_DURATION
+        return poet_cycles_since_genesis + 1
 
     async def create_discord_event(self, name, description, start_time, end_time=None):
         guild = self.bot.get_guild(config.GUILD_ID)
