@@ -82,7 +82,7 @@ class EventsCog(commands.Cog):
             print(f"Updating poet cycle event for current epoch {current_epoch}")
 
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
-        next_poet_cycle = self.calculate_poet_cycle_number(next_poet_cycle_start)
+        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
         
         event_data = self.get_event_data('poet_cycle')
         if event_data and event_data['associated_number'] == next_poet_cycle:
@@ -101,7 +101,7 @@ class EventsCog(commands.Cog):
 
         next_cycle_gap_start = self.calculate_next_cycle_gap_start(current_epoch)
         next_cycle_gap_end = next_cycle_gap_start + CYCLE_GAP_DURATION
-        next_poet_cycle = self.calculate_poet_cycle_number(next_cycle_gap_end)
+        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
         
         event_data = self.get_event_data('cycle_gap')
         if event_data and event_data['associated_number'] == next_poet_cycle:
@@ -118,18 +118,16 @@ class EventsCog(commands.Cog):
         return GENESIS_TIMESTAMP + (epoch_number - 1) * EPOCH_DURATION
 
     def calculate_next_poet_cycle_start(self, current_epoch):
-        current_time = datetime.now(pytz.UTC)
-        poet_cycles_since_genesis = (current_time - GENESIS_TIMESTAMP) // POET_CYCLE_DURATION
-        next_poet_cycle_start = GENESIS_TIMESTAMP + (poet_cycles_since_genesis + 1) * POET_CYCLE_DURATION
-        return next_poet_cycle_start
+        current_epoch_start = self.calculate_epoch_start(current_epoch)
+        next_epoch_start = current_epoch_start + EPOCH_DURATION
+        return next_epoch_start - timedelta(days=4)
 
     def calculate_next_cycle_gap_start(self, current_epoch):
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
         return next_poet_cycle_start - CYCLE_GAP_DURATION
 
-    def calculate_poet_cycle_number(self, date):
-        poet_cycles_since_genesis = (date - GENESIS_TIMESTAMP) // POET_CYCLE_DURATION
-        return poet_cycles_since_genesis + 1
+    def calculate_poet_cycle_number(self, epoch_number):
+        return epoch_number
 
     async def create_discord_event(self, name, description, start_time, end_time=None):
         guild = self.bot.get_guild(config.GUILD_ID)
