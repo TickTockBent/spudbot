@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import config
 import sqlite3
 from datetime import datetime, timedelta
@@ -14,31 +14,50 @@ CYCLE_GAP_DURATION = timedelta(hours=12)
 class EventsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.data_cog = None
-
-    async def cog_load(self):
-        self.data_cog = self.bot.get_cog('DataCog')
-        if self.data_cog:
-            self.data_cog.data_updated.add_listener(self.on_data_updated)
-        else:
-            print("DataCog not found. EventsCog will not function properly.")
+        self.update_events.start()
 
     def cog_unload(self):
-        if self.data_cog:
-            self.data_cog.data_updated.remove_listener(self.on_data_updated)
+        self.update_events.cancel()
 
-    async def on_data_updated(self, processed_data):
+    @tasks.loop(minutes=5)
+    async def update_events(self):
         if config.DEBUG_MODE:
-            print("Received updated data in EventsCog. Starting events update process.")
-        
+            print("Starting events update process")
+
         try:
+            data_cog = self.bot.get_cog('DataCog')
+            if not data_cog:
+                if config.DEBUG_MODE:
+                    print("DataCog not found. Unable to update events.")
+                return
+
+            # Wait for processed data to be available
+            for _ in range(12):  # Try for up to 1 minute (5 seconds * 12)
+                processed_data = data_cog.get_processed_data()
+                if processed_data:
+                    break
+                if config.DEBUG_MODE:
+                    print("Waiting for processed data...")
+                await asyncio.sleep(5)
+            
+            if not processed_data:
+                if config.DEBUG_MODE:
+                    print("No processed data available after waiting. Skipping events update.")
+                return
+
+            if config.DEBUG_MODE:
+                print("Processed data received for events update:")
+                for key, value in processed_data.items():
+                    print(f"  {key}: {value}")
+
             current_epoch = int(processed_data['epoch'])
             await self.update_epoch_event(current_epoch)
             await self.update_poet_cycle_event(current_epoch)
             await self.update_cycle_gap_event(current_epoch)
+
         except Exception as e:
             if config.DEBUG_MODE:
-                print(f"An error occurred in the on_data_updated method: {str(e)}")
+                print(f"An error occurred in the update_events method: {str(e)}")
 
     async def update_epoch_event(self, current_epoch):
         if config.DEBUG_MODE:
@@ -188,6 +207,12 @@ class EventsCog(commands.Cog):
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"Error storing event data: {str(e)}")
+
+    @update_events.before_loop
+    async def before_update_events(self):
+        await self.bot.wait_until_ready()
+        if config.DEBUG_MODE:
+            print("EventsCog is ready and will start updating events.")
 
 async def setup(bot):
     await bot.add_cog(EventsCog(bot))
