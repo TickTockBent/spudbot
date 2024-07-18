@@ -4,14 +4,20 @@ import config
 import sqlite3
 from datetime import datetime, timedelta
 import asyncio
+import matplotlib.pyplot as plt
+import io
+import os
 
 class EmbedCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.update_embed.start()
+        self.graph_file = 'price_graph.png'
 
     def cog_unload(self):
         self.update_embed.cancel()
+        if os.path.exists(self.graph_file):
+            os.remove(self.graph_file)
 
     @tasks.loop(minutes=5)
     async def update_embed(self):
@@ -45,11 +51,12 @@ class EmbedCog(commands.Cog):
                     print(f"  {key}: {value}")
 
             price_data = self.get_price_data()
-            graph = self.generate_graph(price_data)
+            self.generate_line_graph(price_data)
             trend = self.calculate_trend(price_data)
 
             embed = discord.Embed(title="Spacemesh Network Statistics", color=0x00ff00)
-            embed.add_field(name="Price Graph (Last 12 Hours)", value=f"```{graph}```", inline=False)
+            file = discord.File(self.graph_file, filename="price_graph.png")
+            embed.set_image(url="attachment://price_graph.png")
             embed.add_field(name="24h Price Trend", value=f"{trend} | Current Price: ${processed_data['price']:.2f}", inline=False)
             embed.add_field(name="Epoch Statistics", value=self.format_epoch_stats(processed_data), inline=False)
             embed.add_field(name="Network Statistics", value=self.format_network_stats(processed_data), inline=False)
@@ -66,18 +73,18 @@ class EmbedCog(commands.Cog):
                 if embed_message_id:
                     try:
                         message = await channel.fetch_message(embed_message_id)
-                        await message.edit(embed=embed)
+                        await message.edit(embed=embed, attachments=[file])
                         if config.DEBUG_MODE:
                             print("Embed updated successfully")
                     except discord.errors.NotFound:
                         if config.DEBUG_MODE:
                             print("Embed message not found. Creating a new one.")
-                        new_message = await channel.send(embed=embed)
+                        new_message = await channel.send(file=file, embed=embed)
                         self.store_embed_message_id(new_message.id)
                         if config.DEBUG_MODE:
                             print(f"New embed message created with ID: {new_message.id}")
                 else:
-                    new_message = await channel.send(embed=embed)
+                    new_message = await channel.send(file=file, embed=embed)
                     self.store_embed_message_id(new_message.id)
                     if config.DEBUG_MODE:
                         print(f"New embed message created with ID: {new_message.id}")
@@ -127,34 +134,29 @@ class EmbedCog(commands.Cog):
                 print(f"Error fetching price data: {str(e)}")
             return []
 
-    def generate_graph(self, price_data):
+    def generate_line_graph(self, price_data):
         if not price_data:
-            return "No price data available"
+            return
 
-        try:
-            prices = [price for _, price in price_data]
-            min_price, max_price = min(prices), max(prices)
-            if min_price == max_price:
-                normalized_prices = [0] * len(prices)
-            else:
-                normalized_prices = [int((price - min_price) / (max_price - min_price) * 5) for price in prices]
+        timestamps = [datetime.fromisoformat(t) for t, _ in price_data]
+        prices = [p for _, p in price_data]
 
-            graph = [" " * 40 for _ in range(6)]
-            for i, height in enumerate(normalized_prices):
-                for j in range(height + 1):
-                    graph[5 - j] = graph[5 - j][:i] + "│" + graph[5 - j][i+1:]
+        plt.figure(figsize=(10, 5))
+        plt.plot(timestamps, prices, color='lime', linewidth=2)
+        plt.title("Spacemesh Price (Last 12 Hours)", color='white')
+        plt.xlabel("Time", color='white')
+        plt.ylabel("Price ($)", color='white')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.gca().set_facecolor('black')
+        plt.gcf().set_facecolor('black')
+        plt.tick_params(colors='white')
+        plt.gca().spines['bottom'].set_color('white')
+        plt.gca().spines['left'].set_color('white')
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
 
-            graph = [f"${price:.2f} │" + line for price, line in zip(reversed(prices[:6]), graph)]
-
-            time_labels = ["Now", "3h", "6h", "9h", "12h"]
-            graph.append("      " + "─" * 40)
-            graph.append("      " + "   ".join(time_labels).center(40))
-
-            return "\n".join(graph)
-        except Exception as e:
-            if config.DEBUG_MODE:
-                print(f"Error generating graph: {str(e)}")
-            return "Error generating graph"
+        plt.savefig(self.graph_file, dpi=100, bbox_inches='tight', facecolor='black')
+        plt.close()
 
     def calculate_trend(self, price_data):
         if len(price_data) < 2:
