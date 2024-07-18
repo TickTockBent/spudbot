@@ -44,72 +44,74 @@ class EmbedCog(commands.Cog):
                 for key, value in processed_data.items():
                     print(f"  {key}: {value}")
 
-            if config.DEBUG_MODE:
-                print("Fetching price data for graph")
             price_data = self.get_price_data()
-            
-            if config.DEBUG_MODE:
-                print("Generating graph")
             graph = self.generate_graph(price_data)
-            
-            if config.DEBUG_MODE:
-                print("Calculating price trend")
             trend = self.calculate_trend(price_data)
 
-            if config.DEBUG_MODE:
-                print("Creating embed")
             embed = discord.Embed(title="Spacemesh Network Statistics", color=0x00ff00)
             embed.add_field(name="Price Graph (Last 12 Hours)", value=f"```{graph}```", inline=False)
             embed.add_field(name="24h Price Trend", value=f"{trend} | Current Price: ${processed_data['price']:.2f}", inline=False)
-
-            # Add other statistics fields
             embed.add_field(name="Epoch Statistics", value=self.format_epoch_stats(processed_data), inline=False)
             embed.add_field(name="Network Statistics", value=self.format_network_stats(processed_data), inline=False)
             embed.add_field(name="Vesting Statistics", value=self.format_vesting_stats(processed_data), inline=False)
             embed.add_field(name="Next Epoch", value=self.format_next_epoch(processed_data), inline=False)
 
-            # Add timestamp
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
             embed.set_footer(text=f"Last updated: {current_time}")
 
-            # Update the embed message
             embed_channel_id = config.CHANNEL_IDS['embed']
             channel = self.bot.get_channel(embed_channel_id)
             if channel:
-                if config.DEBUG_MODE:
-                    print(f"Found embed channel with ID: {embed_channel_id}")
-                try:
-                    async for message in channel.history(limit=1):
-                        if config.DEBUG_MODE:
-                            print("Updating existing embed message")
+                embed_message_id = self.get_embed_message_id()
+                if embed_message_id:
+                    try:
+                        message = await channel.fetch_message(embed_message_id)
                         await message.edit(embed=embed)
                         if config.DEBUG_MODE:
                             print("Embed updated successfully")
-                        break
-                    else:
+                    except discord.errors.NotFound:
                         if config.DEBUG_MODE:
-                            print("No existing message found. Sending new embed message")
-                        await channel.send(embed=embed)
+                            print("Embed message not found. Creating a new one.")
+                        new_message = await channel.send(embed=embed)
+                        self.store_embed_message_id(new_message.id)
                         if config.DEBUG_MODE:
-                            print("New embed message sent")
-                except discord.errors.NotFound:
+                            print(f"New embed message created with ID: {new_message.id}")
+                else:
+                    new_message = await channel.send(embed=embed)
+                    self.store_embed_message_id(new_message.id)
                     if config.DEBUG_MODE:
-                        print("Message not found. Sending new embed message")
-                    await channel.send(embed=embed)
-                    if config.DEBUG_MODE:
-                        print("New embed message sent")
-                except discord.errors.Forbidden:
-                    if config.DEBUG_MODE:
-                        print("Bot doesn't have permission to send/edit messages in the embed channel")
-                except Exception as e:
-                    if config.DEBUG_MODE:
-                        print(f"An error occurred while updating the embed: {str(e)}")
+                        print(f"New embed message created with ID: {new_message.id}")
             else:
                 if config.DEBUG_MODE:
                     print(f"Embed channel with ID {embed_channel_id} not found")
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"An error occurred in the update_embed method: {str(e)}")
+
+    def get_embed_message_id(self):
+        try:
+            conn = sqlite3.connect('spacemesh_data.db')
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM bot_data WHERE key = 'embed_message_id'")
+            result = cursor.fetchone()
+            conn.close()
+            return int(result[0]) if result else None
+        except Exception as e:
+            if config.DEBUG_MODE:
+                print(f"Error fetching embed message ID: {str(e)}")
+            return None
+
+    def store_embed_message_id(self, message_id):
+        try:
+            conn = sqlite3.connect('spacemesh_data.db')
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE IF NOT EXISTS bot_data (key TEXT PRIMARY KEY, value TEXT)")
+            cursor.execute("INSERT OR REPLACE INTO bot_data (key, value) VALUES (?, ?)", ('embed_message_id', str(message_id)))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            if config.DEBUG_MODE:
+                print(f"Error storing embed message ID: {str(e)}")
 
     def get_price_data(self):
         try:
@@ -130,7 +132,6 @@ class EmbedCog(commands.Cog):
             return "No price data available"
 
         try:
-            # Normalize the data to fit in the graph
             prices = [price for _, price in price_data]
             min_price, max_price = min(prices), max(prices)
             if min_price == max_price:
@@ -138,16 +139,13 @@ class EmbedCog(commands.Cog):
             else:
                 normalized_prices = [int((price - min_price) / (max_price - min_price) * 5) for price in prices]
 
-            # Generate the graph
             graph = [" " * 40 for _ in range(6)]
             for i, height in enumerate(normalized_prices):
                 for j in range(height + 1):
                     graph[5 - j] = graph[5 - j][:i] + "│" + graph[5 - j][i+1:]
 
-            # Add price labels
             graph = [f"${price:.2f} │" + line for price, line in zip(reversed(prices[:6]), graph)]
 
-            # Add time labels
             time_labels = ["Now", "3h", "6h", "9h", "12h"]
             graph.append("      " + "─" * 40)
             graph.append("      " + "   ".join(time_labels).center(40))
