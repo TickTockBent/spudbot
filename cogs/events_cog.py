@@ -4,8 +4,9 @@ import config
 import sqlite3
 from datetime import datetime, timedelta
 import asyncio
+import pytz  # Make sure to install this: pip install pytz
 
-GENESIS_TIMESTAMP = datetime(2023, 7, 14, 8, 0, 0, tzinfo=datetime.timezone.utc)
+GENESIS_TIMESTAMP = datetime(2023, 7, 14, 8, 0, 0, tzinfo=pytz.UTC)
 EPOCH_DURATION = timedelta(days=14)
 POET_CYCLE_DURATION = timedelta(days=13, hours=12)
 CYCLE_GAP_DURATION = timedelta(hours=12)
@@ -89,7 +90,7 @@ class EventsCog(commands.Cog):
         return GENESIS_TIMESTAMP + (epoch_number - 1) * EPOCH_DURATION
 
     def calculate_next_poet_cycle_start(self, current_epoch):
-        current_time = datetime.now(datetime.timezone.utc)
+        current_time = datetime.now(pytz.UTC)
         poet_cycles_since_genesis = (current_time - GENESIS_TIMESTAMP) // POET_CYCLE_DURATION
         next_poet_cycle_start = GENESIS_TIMESTAMP + (poet_cycles_since_genesis + 1) * POET_CYCLE_DURATION
         return next_poet_cycle_start
