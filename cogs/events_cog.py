@@ -161,22 +161,29 @@ class EventsCog(commands.Cog):
             if config.DEBUG_MODE:
                 print(f"Guild with ID {config.GUILD_ID} not found")
             return
+
         try:
+            # Check if event_id is a valid integer
+            if not isinstance(event_id, int):
+                raise ValueError("Invalid event ID")
+
             event = await guild.fetch_scheduled_event(event_id)
             await event.edit(
                 name=name,
                 description=description,
                 start_time=start_time,
-                end_time=end_time
+                end_time=end_time,
+                entity_type=discord.EntityType.external,
+                location="Spacemesh Network"
             )
             if config.DEBUG_MODE:
                 print(f"Updated Discord event: {name}")
-        except discord.NotFound:
+        except (discord.NotFound, ValueError) as e:
             if config.DEBUG_MODE:
-                print(f"Event with ID {event_id} not found. Creating a new one.")
+                print(f"Event with ID {event_id} not found or invalid. Creating a new one.")
             new_event_id = await self.create_discord_event(name, description, start_time, end_time)
             if new_event_id:
-                self.store_event_data(name.split()[0].lower(), new_event_id, int(name.split()[1]))
+                self.store_event_data(name.split()[0].lower(), new_event_id, int(name.split()[1]) if name.split()[1].isdigit() else 0)
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"Error updating Discord event: {str(e)}")
@@ -188,7 +195,7 @@ class EventsCog(commands.Cog):
             cursor.execute("SELECT event_id, associated_number FROM events WHERE event_type = ?", (event_type,))
             result = cursor.fetchone()
             conn.close()
-            return {'event_id': result[0], 'associated_number': result[1]} if result else None
+            return {'event_id': int(result[0]), 'associated_number': result[1]} if result else None
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"Error getting event data: {str(e)}")
