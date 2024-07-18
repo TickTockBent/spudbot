@@ -65,17 +65,19 @@ class EventsCog(commands.Cog):
 
         next_epoch = current_epoch + 1
         next_epoch_start = self.calculate_epoch_start(next_epoch)
+        next_epoch_end = next_epoch_start + EPOCH_DURATION
         
         event_data = self.get_event_data('epoch')
         if event_data and event_data['associated_number'] == next_epoch:
             if config.DEBUG_MODE:
                 print(f"Existing epoch event found for epoch {next_epoch}")
-            await self.update_discord_event(event_data['event_id'], f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start)
+            await self.update_discord_event(event_data['event_id'], f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start, next_epoch_end)
         else:
             if config.DEBUG_MODE:
                 print(f"Creating new epoch event for epoch {next_epoch}")
-            event_id = await self.create_discord_event(f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start)
-            self.store_event_data('epoch', event_id, next_epoch)
+            event_id = await self.create_discord_event(f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start, next_epoch_end)
+            if event_id:
+                self.store_event_data('epoch', event_id, next_epoch)
 
     async def update_poet_cycle_event(self, current_epoch):
         if config.DEBUG_MODE:
@@ -83,17 +85,19 @@ class EventsCog(commands.Cog):
 
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
         next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
+        next_poet_cycle_end = next_poet_cycle_start + POET_CYCLE_DURATION
         
         event_data = self.get_event_data('poet_cycle')
         if event_data and event_data['associated_number'] == next_poet_cycle:
             if config.DEBUG_MODE:
                 print(f"Existing poet cycle event found for cycle {next_poet_cycle}")
-            await self.update_discord_event(event_data['event_id'], f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start)
+            await self.update_discord_event(event_data['event_id'], f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
         else:
             if config.DEBUG_MODE:
                 print(f"Creating new poet cycle event for cycle {next_poet_cycle}")
-            event_id = await self.create_discord_event(f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start)
-            self.store_event_data('poet_cycle', event_id, next_poet_cycle)
+            event_id = await self.create_discord_event(f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
+            if event_id:
+                self.store_event_data('poet_cycle', event_id, next_poet_cycle)
 
     async def update_cycle_gap_event(self, current_epoch):
         if config.DEBUG_MODE:
@@ -112,7 +116,8 @@ class EventsCog(commands.Cog):
             if config.DEBUG_MODE:
                 print(f"Creating new cycle gap event for cycle {next_poet_cycle}")
             event_id = await self.create_discord_event("Cycle Gap", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
-            self.store_event_data('cycle_gap', event_id, next_poet_cycle)
+            if event_id:
+                self.store_event_data('cycle_gap', event_id, next_poet_cycle)
 
     def calculate_epoch_start(self, epoch_number):
         return GENESIS_TIMESTAMP + (epoch_number - 1) * EPOCH_DURATION
@@ -129,13 +134,20 @@ class EventsCog(commands.Cog):
     def calculate_poet_cycle_number(self, epoch_number):
         return epoch_number
 
-    async def create_discord_event(self, name, description, start_time, end_time=None):
+    async def create_discord_event(self, name, description, start_time, end_time):
         guild = self.bot.get_guild(config.GUILD_ID)
         if not guild:
             if config.DEBUG_MODE:
                 print(f"Guild with ID {config.GUILD_ID} not found")
             return None
         try:
+            # Ensure start_time and end_time are in the future
+            now = datetime.now(pytz.UTC)
+            if start_time <= now:
+                time_diff = now - start_time
+                start_time = now + timedelta(minutes=5)
+                end_time = end_time + time_diff + timedelta(minutes=5)
+            
             event = await guild.create_scheduled_event(
                 name=name,
                 description=description,
@@ -153,7 +165,7 @@ class EventsCog(commands.Cog):
                 print(f"Error creating Discord event: {str(e)}")
             return None
 
-    async def update_discord_event(self, event_id, name, description, start_time, end_time=None):
+    async def update_discord_event(self, event_id, name, description, start_time, end_time):
         guild = self.bot.get_guild(config.GUILD_ID)
         if not guild:
             if config.DEBUG_MODE:
@@ -193,13 +205,20 @@ class EventsCog(commands.Cog):
             cursor.execute("SELECT event_id, associated_number FROM events WHERE event_type = ?", (event_type,))
             result = cursor.fetchone()
             conn.close()
-            return {'event_id': int(result[0]), 'associated_number': result[1]} if result else None
+            if result and result[0] is not None:
+                return {'event_id': int(result[0]), 'associated_number': result[1]}
+            return None
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"Error getting event data: {str(e)}")
             return None
 
     def store_event_data(self, event_type, event_id, associated_number):
+        if event_id is None:
+            if config.DEBUG_MODE:
+                print(f"Attempted to store invalid event data: {event_type}, {event_id}, {associated_number}")
+            return
+        
         try:
             conn = sqlite3.connect('spacemesh_data.db')
             cursor = conn.cursor()
