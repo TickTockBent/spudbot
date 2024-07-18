@@ -68,6 +68,10 @@ class EmbedCog(commands.Cog):
             embed.add_field(name="Vesting Statistics", value=self.format_vesting_stats(processed_data), inline=False)
             embed.add_field(name="Next Epoch", value=self.format_next_epoch(processed_data), inline=False)
 
+            # Add timestamp
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+            embed.set_footer(text=f"Last updated: {current_time}")
+
             # Update the embed message
             embed_channel_id = config.CHANNEL_IDS['embed']
             channel = self.bot.get_channel(embed_channel_id)
