@@ -144,6 +144,7 @@ class EventsCog(commands.Cog):
                 start_time=start_time,
                 end_time=end_time,
                 entity_type=discord.EntityType.external,
+                privacy_level=discord.PrivacyLevel.guild_only,
                 location="Spacemesh Network"
             )
             if config.DEBUG_MODE:
