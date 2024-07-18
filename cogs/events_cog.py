@@ -67,6 +67,10 @@ class EventsCog(commands.Cog):
         next_epoch_start = self.calculate_epoch_start(next_epoch)
         next_epoch_end = next_epoch_start + EPOCH_DURATION
         
+        if config.DEBUG_MODE:
+            print(f"Calculated next epoch start: {next_epoch_start}")
+            print(f"Calculated next epoch end: {next_epoch_end}")
+
         event_data = self.get_event_data('epoch')
         if event_data and event_data['associated_number'] == next_epoch:
             if config.DEBUG_MODE:
@@ -87,6 +91,10 @@ class EventsCog(commands.Cog):
         next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
         next_poet_cycle_end = next_poet_cycle_start + POET_CYCLE_DURATION
         
+        if config.DEBUG_MODE:
+            print(f"Calculated next poet cycle start: {next_poet_cycle_start}")
+            print(f"Calculated next poet cycle end: {next_poet_cycle_end}")
+
         event_data = self.get_event_data('poet_cycle')
         if event_data and event_data['associated_number'] == next_poet_cycle:
             if config.DEBUG_MODE:
@@ -107,6 +115,10 @@ class EventsCog(commands.Cog):
         next_cycle_gap_end = next_cycle_gap_start + CYCLE_GAP_DURATION
         next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
         
+        if config.DEBUG_MODE:
+            print(f"Calculated next cycle gap start: {next_cycle_gap_start}")
+            print(f"Calculated next cycle gap end: {next_cycle_gap_end}")
+
         event_data = self.get_event_data('cycle_gap')
         if event_data and event_data['associated_number'] == next_poet_cycle:
             if config.DEBUG_MODE:
@@ -144,9 +156,16 @@ class EventsCog(commands.Cog):
             # Ensure start_time and end_time are in the future
             now = datetime.now(pytz.UTC)
             if start_time <= now:
+                if config.DEBUG_MODE:
+                    print(f"Calculated start time {start_time} is in the past. Adjusting to near future.")
                 time_diff = now - start_time
                 start_time = now + timedelta(minutes=5)
                 end_time = end_time + time_diff + timedelta(minutes=5)
+            
+            if config.DEBUG_MODE:
+                print(f"Creating event: {name}")
+                print(f"Start time: {start_time}")
+                print(f"End time: {end_time}")
             
             event = await guild.create_scheduled_event(
                 name=name,
