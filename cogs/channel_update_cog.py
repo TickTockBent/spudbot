@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands, tasks
 import config
 import asyncio
+import sqlite3
+from datetime import datetime, timedelta
+import statistics
 
 class ChannelUpdateCog(commands.Cog):
     def __init__(self, bot):
@@ -79,7 +82,20 @@ class ChannelUpdateCog(commands.Cog):
 
     def format_channel_name(self, channel_name, data):
         if channel_name == 'price':
-            return f"Price: ${data['price']}"
+            try:
+                price = data['price']
+                trend = self.get_price_trend()
+                if trend == "up":
+                    trend_indicator = " :Up:"
+                elif trend == "down":
+                    trend_indicator = " :Down:"
+                else:
+                    trend_indicator = ""
+                return f"Price: ${price:.2f}{trend_indicator}"
+            except KeyError:
+                if config.DEBUG_MODE:
+                    print("Price data not available in processed data")
+                return "Price: N/A"
         elif channel_name == 'circulatingsupply':
             return f"Circ. Supply: {data['circulatingSupply']}M SMH"
         elif channel_name == 'marketcap':
@@ -94,6 +110,39 @@ class ChannelUpdateCog(commands.Cog):
             return f"% Total Supply: {data['percentTotalSupply']}%"
         else:
             return channel_name
+
+    def get_price_trend(self):
+        try:
+            conn = sqlite3.connect('spacemesh_data.db')
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT value FROM spacemesh_data 
+                WHERE data_type = 'price' 
+                ORDER BY timestamp DESC 
+                LIMIT 10
+            """)
+            prices = [row[0] for row in cursor.fetchall()]
+            conn.close()
+
+            if len(prices) < 6:  # We need at least 6 data points for a meaningful comparison
+                return "neutral"
+
+            # Calculate the average of the first half and second half of the data
+            first_half = statistics.mean(prices[5:])
+            second_half = statistics.mean(prices[:5])
+
+            # Determine the trend
+            if second_half > first_half * 1.005:  # 0.5% increase
+                return "up"
+            elif second_half < first_half * 0.995:  # 0.5% decrease
+                return "down"
+            else:
+                return "neutral"
+
+        except Exception as e:
+            if config.DEBUG_MODE:
+                print(f"Error fetching price trend: {str(e)}")
+            return "neutral"
 
     @update_channels.before_loop
     async def before_update_channels(self):
