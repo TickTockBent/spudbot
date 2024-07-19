@@ -135,8 +135,8 @@ class EventsCog(commands.Cog):
         return GENESIS_TIMESTAMP + (epoch_number - 1) * EPOCH_DURATION
 
     def calculate_next_poet_cycle_start(self, current_epoch):
-        current_epoch_start = self.calculate_epoch_start(current_epoch)
-        next_epoch_start = current_epoch_start + EPOCH_DURATION
+        next_epoch = current_epoch + 1
+        next_epoch_start = self.calculate_epoch_start(next_epoch)
         return next_epoch_start - timedelta(days=4)
 
     def calculate_next_cycle_gap_start(self, current_epoch):
@@ -153,15 +153,6 @@ class EventsCog(commands.Cog):
                 print(f"Guild with ID {config.GUILD_ID} not found")
             return None
         try:
-            # Ensure start_time and end_time are in the future
-            now = datetime.now(pytz.UTC)
-            if start_time <= now:
-                if config.DEBUG_MODE:
-                    print(f"Calculated start time {start_time} is in the past. Adjusting to near future.")
-                time_diff = now - start_time
-                start_time = now + timedelta(minutes=5)
-                end_time = end_time + time_diff + timedelta(minutes=5)
-            
             if config.DEBUG_MODE:
                 print(f"Creating event: {name}")
                 print(f"Start time: {start_time}")
