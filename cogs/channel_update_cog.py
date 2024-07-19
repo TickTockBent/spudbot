@@ -90,8 +90,6 @@ class ChannelUpdateCog(commands.Cog):
             return f"Layer: {data['layer']}"
         elif channel_name == 'networksize':
             return f"Netspace: {data['effectiveUnitsCommited']}EiB"
-        elif channel_name == 'activesmeshers':
-            return f"Active Smeshers: {data['totalActiveSmeshers']}M"
         elif channel_name == 'percenttotalsupply':
             return f"% Total Supply: {data['percentTotalSupply']}%"
         else:

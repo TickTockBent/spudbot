@@ -7,7 +7,6 @@ CHANNEL_IDS = {
     'epoch': 1174914788124532867,
     'layer': 1174914827622285364,
     'networksize': 1174914845255147591,
-    'activesmeshers': 1175047280252952677,
     'percenttotalsupply': 1175459680387076167,
     'embed': 1262487040776339497
 }
