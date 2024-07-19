@@ -65,12 +65,6 @@ class EventsCog(commands.Cog):
 
         next_epoch = current_epoch + 1
         next_epoch_start = self.calculate_epoch_start(next_epoch)
-        
-        # Ensure the event is always in the future
-        while next_epoch_start <= datetime.now(pytz.UTC):
-            next_epoch += 1
-            next_epoch_start = self.calculate_epoch_start(next_epoch)
-
         next_epoch_end = next_epoch_start + EPOCH_DURATION
         
         if config.DEBUG_MODE:
@@ -95,18 +89,19 @@ class EventsCog(commands.Cog):
             print(f"Updating poet cycle event for current epoch {current_epoch}")
 
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
-        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch)
+        next_poet_cycle = current_epoch + 1
         next_poet_cycle_end = next_poet_cycle_start + POET_CYCLE_DURATION
         
         if config.DEBUG_MODE:
             print(f"Calculated next poet cycle start: {next_poet_cycle_start}")
             print(f"Calculated next poet cycle end: {next_poet_cycle_end}")
+            print(f"Next poet cycle number: {next_poet_cycle}")
 
         event_data = self.get_event_data('poet_cycle')
         if event_data and event_data['associated_number'] == next_poet_cycle:
             if config.DEBUG_MODE:
                 print(f"Existing poet cycle event found for cycle {next_poet_cycle}")
-            await self.update_discord_event(event_data['event_id'], f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
+            await self.update_discord_event(event_data['event_id'], f"Poet Round {next_poet_cycle} Start", f"Poet Round {next_poet_cycle} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
         else:
             if config.DEBUG_MODE:
                 print(f"Creating new poet cycle event for cycle {next_poet_cycle}")
@@ -120,21 +115,22 @@ class EventsCog(commands.Cog):
 
         next_cycle_gap_start = self.calculate_next_cycle_gap_start(current_epoch)
         next_cycle_gap_end = next_cycle_gap_start + CYCLE_GAP_DURATION
-        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch)
+        next_poet_cycle = current_epoch + 1
         
         if config.DEBUG_MODE:
             print(f"Calculated next cycle gap start: {next_cycle_gap_start}")
             print(f"Calculated next cycle gap end: {next_cycle_gap_end}")
+            print(f"Next poet cycle number: {next_poet_cycle}")
 
         event_data = self.get_event_data('cycle_gap')
         if event_data and event_data['associated_number'] == next_poet_cycle:
             if config.DEBUG_MODE:
                 print(f"Existing cycle gap event found for cycle {next_poet_cycle}")
-            await self.update_discord_event(event_data['event_id'], "Cycle Gap", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
+            await self.update_discord_event(event_data['event_id'], f"Cycle Gap before Epoch {next_poet_cycle}", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
         else:
             if config.DEBUG_MODE:
                 print(f"Creating new cycle gap event for cycle {next_poet_cycle}")
-            event_id = await self.create_discord_event("Cycle Gap", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
+            event_id = await self.create_discord_event(f"Cycle Gap before Epoch {next_poet_cycle}", "The cycle gap will occur during this time.", next_cycle_gap_start, next_cycle_gap_end)
             if event_id:
                 self.store_event_data('cycle_gap', event_id, next_poet_cycle)
 
@@ -144,29 +140,11 @@ class EventsCog(commands.Cog):
     def calculate_next_poet_cycle_start(self, current_epoch):
         next_epoch = current_epoch + 1
         next_epoch_start = self.calculate_epoch_start(next_epoch)
-        poet_cycle_start = next_epoch_start - timedelta(days=4)
-        
-        # Ensure the event is always in the future
-        while poet_cycle_start <= datetime.now(pytz.UTC):
-            next_epoch += 1
-            next_epoch_start = self.calculate_epoch_start(next_epoch)
-            poet_cycle_start = next_epoch_start - timedelta(days=4)
-        
-        return poet_cycle_start
+        return next_epoch_start - timedelta(days=4)
 
     def calculate_next_cycle_gap_start(self, current_epoch):
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
-        cycle_gap_start = next_poet_cycle_start - CYCLE_GAP_DURATION
-        
-        # Ensure the event is always in the future
-        while cycle_gap_start <= datetime.now(pytz.UTC):
-            next_poet_cycle_start += EPOCH_DURATION
-            cycle_gap_start = next_poet_cycle_start - CYCLE_GAP_DURATION
-        
-        return cycle_gap_start
-
-    def calculate_poet_cycle_number(self, epoch_number):
-        return epoch_number
+        return next_poet_cycle_start - CYCLE_GAP_DURATION
 
     async def create_discord_event(self, name, description, start_time, end_time):
         guild = self.bot.get_guild(config.GUILD_ID)
