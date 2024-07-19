@@ -109,7 +109,7 @@ class EventsCog(commands.Cog):
         else:
             if config.DEBUG_MODE:
                 print(f"Creating new poet cycle event for cycle {next_poet_cycle}")
-            event_id = await self.create_discord_event(f"Poet Cycle {next_poet_cycle} Start", f"Poet Cycle {next_poet_cycle} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
+            event_id = await self.create_discord_event(f"Poet Round {next_poet_cycle} Start", f"Poet Round {next_poet_cycle} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
             if event_id:
                 self.store_event_data('poet_cycle', event_id, next_poet_cycle)
 
