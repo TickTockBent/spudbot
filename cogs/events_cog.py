@@ -65,6 +65,12 @@ class EventsCog(commands.Cog):
 
         next_epoch = current_epoch + 1
         next_epoch_start = self.calculate_epoch_start(next_epoch)
+        
+        # Ensure the event is always in the future
+        while next_epoch_start <= datetime.now(pytz.UTC):
+            next_epoch += 1
+            next_epoch_start = self.calculate_epoch_start(next_epoch)
+
         next_epoch_end = next_epoch_start + EPOCH_DURATION
         
         if config.DEBUG_MODE:
@@ -137,11 +143,26 @@ class EventsCog(commands.Cog):
     def calculate_next_poet_cycle_start(self, current_epoch):
         next_epoch = current_epoch + 1
         next_epoch_start = self.calculate_epoch_start(next_epoch)
-        return next_epoch_start - timedelta(days=4)
+        poet_cycle_start = next_epoch_start - timedelta(days=4)
+        
+        # Ensure the event is always in the future
+        while poet_cycle_start <= datetime.now(pytz.UTC):
+            next_epoch += 1
+            next_epoch_start = self.calculate_epoch_start(next_epoch)
+            poet_cycle_start = next_epoch_start - timedelta(days=4)
+        
+        return poet_cycle_start
 
     def calculate_next_cycle_gap_start(self, current_epoch):
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
-        return next_poet_cycle_start - CYCLE_GAP_DURATION
+        cycle_gap_start = next_poet_cycle_start - CYCLE_GAP_DURATION
+        
+        # Ensure the event is always in the future
+        while cycle_gap_start <= datetime.now(pytz.UTC):
+            next_poet_cycle_start += EPOCH_DURATION
+            cycle_gap_start = next_poet_cycle_start - CYCLE_GAP_DURATION
+        
+        return cycle_gap_start
 
     def calculate_poet_cycle_number(self, epoch_number):
         return epoch_number
