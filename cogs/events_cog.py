@@ -58,13 +58,17 @@ class EventsCog(commands.Cog):
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"An error occurred in the update_events method: {str(e)}")
+    def calculate_next_epoch_start(self, current_epoch):
+        current_epoch_start = GENESIS_TIMESTAMP + current_epoch * EPOCH_DURATION
+        next_epoch_start = current_epoch_start + EPOCH_DURATION
+        return next_epoch_start
 
     async def update_epoch_event(self, current_epoch):
         if config.DEBUG_MODE:
             print(f"Updating epoch event for current epoch {current_epoch}")
 
         next_epoch = current_epoch + 1
-        next_epoch_start = self.calculate_epoch_start(next_epoch)
+        next_epoch_start = self.calculate_next_epoch_start(current_epoch)
         next_epoch_end = next_epoch_start + EPOCH_DURATION
         
         if config.DEBUG_MODE:
@@ -90,11 +94,12 @@ class EventsCog(commands.Cog):
             print(f"Updating poet cycle event for current epoch {current_epoch}")
 
         next_epoch = current_epoch + 1
-        next_epoch_start = self.calculate_epoch_start(next_epoch)
+        next_epoch_start = self.calculate_next_epoch_start(current_epoch)
         next_poet_cycle_start = next_epoch_start - timedelta(days=4)
         next_poet_cycle_end = next_epoch_start - CYCLE_GAP_DURATION
 
         if config.DEBUG_MODE:
+            print(f"Next epoch: {next_epoch}")
             print(f"Next poet cycle start: {next_poet_cycle_start}")
             print(f"Next poet cycle end: {next_poet_cycle_end}")
 
@@ -115,11 +120,12 @@ class EventsCog(commands.Cog):
             print(f"Updating cycle gap event for current epoch {current_epoch}")
 
         next_epoch = current_epoch + 1
-        next_epoch_start = self.calculate_epoch_start(next_epoch)
+        next_epoch_start = self.calculate_next_epoch_start(current_epoch)
         next_cycle_gap_start = next_epoch_start - CYCLE_GAP_DURATION
         next_cycle_gap_end = next_epoch_start
 
         if config.DEBUG_MODE:
+            print(f"Next epoch: {next_epoch}")
             print(f"Next cycle gap start: {next_cycle_gap_start}")
             print(f"Next cycle gap end: {next_cycle_gap_end}")
 
