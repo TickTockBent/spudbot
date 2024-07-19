@@ -63,30 +63,32 @@ class EventsCog(commands.Cog):
         if config.DEBUG_MODE:
             print(f"Updating epoch event for current epoch {current_epoch}")
 
-        next_epoch_start = self.calculate_epoch_start(current_epoch)
+        next_epoch = current_epoch + 1
+        next_epoch_start = self.calculate_epoch_start(next_epoch)
         
         # Ensure the event is always in the future
         while next_epoch_start <= datetime.now(pytz.UTC):
-            current_epoch += 1
-            next_epoch_start = self.calculate_epoch_start(current_epoch)
+            next_epoch += 1
+            next_epoch_start = self.calculate_epoch_start(next_epoch)
 
         next_epoch_end = next_epoch_start + EPOCH_DURATION
         
         if config.DEBUG_MODE:
-            print(f"Calculated current epoch start: {next_epoch_start}")
-            print(f"Calculated current epoch end: {next_epoch_end}")
+            print(f"Calculated next epoch start: {next_epoch_start}")
+            print(f"Calculated next epoch end: {next_epoch_end}")
+            print(f"Next epoch number: {next_epoch}")
 
         event_data = self.get_event_data('epoch')
-        if event_data and event_data['associated_number'] == current_epoch:
+        if event_data and event_data['associated_number'] == next_epoch:
             if config.DEBUG_MODE:
-                print(f"Existing epoch event found for epoch {current_epoch}")
-            await self.update_discord_event(event_data['event_id'], f"Epoch {current_epoch} Start", f"Epoch {current_epoch} will start at this time.", next_epoch_start, next_epoch_end)
+                print(f"Existing epoch event found for epoch {next_epoch}")
+            await self.update_discord_event(event_data['event_id'], f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start, next_epoch_end)
         else:
             if config.DEBUG_MODE:
-                print(f"Creating new epoch event for epoch {current_epoch}")
-            event_id = await self.create_discord_event(f"Epoch {current_epoch} Start", f"Epoch {current_epoch} will start at this time.", next_epoch_start, next_epoch_end)
+                print(f"Creating new epoch event for epoch {next_epoch}")
+            event_id = await self.create_discord_event(f"Epoch {next_epoch} Start", f"Epoch {next_epoch} will start at this time.", next_epoch_start, next_epoch_end)
             if event_id:
-                self.store_event_data('epoch', event_id, current_epoch)
+                self.store_event_data('epoch', event_id, next_epoch)
 
     async def update_poet_cycle_event(self, current_epoch):
         if config.DEBUG_MODE:
