@@ -94,7 +94,7 @@ class EventsCog(commands.Cog):
             print(f"Updating poet cycle event for current epoch {current_epoch}")
 
         next_poet_cycle_start = self.calculate_next_poet_cycle_start(current_epoch)
-        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
+        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch)
         next_poet_cycle_end = next_poet_cycle_start + POET_CYCLE_DURATION
         
         if config.DEBUG_MODE:
@@ -119,7 +119,7 @@ class EventsCog(commands.Cog):
 
         next_cycle_gap_start = self.calculate_next_cycle_gap_start(current_epoch)
         next_cycle_gap_end = next_cycle_gap_start + CYCLE_GAP_DURATION
-        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch + 1)
+        next_poet_cycle = self.calculate_poet_cycle_number(current_epoch)
         
         if config.DEBUG_MODE:
             print(f"Calculated next cycle gap start: {next_cycle_gap_start}")
