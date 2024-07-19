@@ -176,11 +176,11 @@ class EventsCog(commands.Cog):
         if event_data and event_data['associated_number'] == poet_round_number:
             if config.DEBUG_MODE:
                 print(f"Existing poet cycle event found for round {poet_round_number}")
-            await self.update_discord_event(event_data['event_id'], f"Poet Round {poet_round_number} Start", f"Poet Round {poet_round_number} for Epoch {next_epoch} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
+            await self.update_discord_event(event_data['event_id'], f"Poet Round {poet_round_number} Start", f"Poet Round {poet_round_number} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
         else:
             if config.DEBUG_MODE:
                 print(f"Creating new poet cycle event for round {poet_round_number}")
-            event_id = await self.create_discord_event(f"Poet Round {poet_round_number} Start", f"Poet Round {poet_round_number} for Epoch {next_epoch} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
+            event_id = await self.create_discord_event(f"Poet Round {poet_round_number} Start", f"Poet Round {poet_round_number} will start at this time.", next_poet_cycle_start, next_poet_cycle_end)
             if event_id:
                 self.store_event_data('poet_cycle', event_id, poet_round_number)
 
