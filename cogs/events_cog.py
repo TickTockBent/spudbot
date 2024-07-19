@@ -31,26 +31,16 @@ class EventsCog(commands.Cog):
                     print("DataCog not found. Unable to update events.")
                 return
 
-            # Wait for processed data to be available
-            for _ in range(12):  # Try for up to 1 minute (5 seconds * 12)
-                processed_data = data_cog.get_processed_data()
-                if processed_data:
-                    break
-                if config.DEBUG_MODE:
-                    print("Waiting for processed data...")
-                await asyncio.sleep(5)
-            
+            processed_data = await self.wait_for_processed_data(data_cog)
             if not processed_data:
-                if config.DEBUG_MODE:
-                    print("No processed data available after waiting. Skipping events update.")
                 return
 
-            if config.DEBUG_MODE:
-                print("Processed data received for events update:")
-                for key, value in processed_data.items():
-                    print(f"  {key}: {value}")
-
             current_epoch = int(processed_data['epoch'])
+            
+            # Fetch all upcoming events and clean up the database
+            await self.sync_events_with_discord()
+
+            # Now update or create the events as needed
             await self.update_epoch_event(current_epoch)
             await self.update_poet_cycle_event(current_epoch)
             await self.update_cycle_gap_event(current_epoch)
@@ -58,6 +48,81 @@ class EventsCog(commands.Cog):
         except Exception as e:
             if config.DEBUG_MODE:
                 print(f"An error occurred in the update_events method: {str(e)}")
+
+    async def wait_for_processed_data(self, data_cog):
+        for _ in range(12):  # Try for up to 1 minute (5 seconds * 12)
+            processed_data = data_cog.get_processed_data()
+            if processed_data:
+                if config.DEBUG_MODE:
+                    print("Processed data received for events update:")
+                    for key, value in processed_data.items():
+                        print(f"  {key}: {value}")
+                return processed_data
+            if config.DEBUG_MODE:
+                print("Waiting for processed data...")
+            await asyncio.sleep(5)
+        
+        if config.DEBUG_MODE:
+            print("No processed data available after waiting. Skipping events update.")
+        return None
+
+    async def sync_events_with_discord(self):
+        guild = self.bot.get_guild(config.GUILD_ID)
+        if not guild:
+            if config.DEBUG_MODE:
+                print(f"Guild with ID {config.GUILD_ID} not found")
+            return
+
+        # Fetch all scheduled events from Discord
+        discord_events = await guild.fetch_scheduled_events()
+        discord_event_ids = {event.id for event in discord_events}
+
+        # Fetch all event IDs from the database
+        db_event_ids = self.get_all_event_ids()
+
+        # Remove any database entries that don't correspond to actual events
+        for db_id in db_event_ids - discord_event_ids:
+            self.remove_event_from_db(db_id)
+            if config.DEBUG_MODE:
+                print(f"Removed non-existent event ID {db_id} from database")
+
+        # Update database with correct event IDs for existing events
+        for event in discord_events:
+            self.update_event_in_db(event.id, event.name)
+
+    def get_all_event_ids(self):
+        conn = sqlite3.connect('spacemesh_data.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT event_id FROM events")
+        event_ids = set(row[0] for row in cursor.fetchall())
+        conn.close()
+        return event_ids
+
+    def remove_event_from_db(self, event_id):
+        conn = sqlite3.connect('spacemesh_data.db')
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM events WHERE event_id = ?", (event_id,))
+        conn.commit()
+        conn.close()
+
+    def update_event_in_db(self, event_id, event_name):
+        event_type = self.get_event_type_from_name(event_name)
+        if event_type:
+            conn = sqlite3.connect('spacemesh_data.db')
+            cursor = conn.cursor()
+            cursor.execute("UPDATE events SET event_id = ? WHERE event_type = ?", (event_id, event_type))
+            conn.commit()
+            conn.close()
+
+    def get_event_type_from_name(self, event_name):
+        if "Epoch" in event_name:
+            return "epoch"
+        elif "Poet Round" in event_name:
+            return "poet_cycle"
+        elif "Cycle Gap" in event_name:
+            return "cycle_gap"
+        return None
+
     def calculate_next_epoch_start(self, current_epoch):
         current_epoch_start = GENESIS_TIMESTAMP + current_epoch * EPOCH_DURATION
         next_epoch_start = current_epoch_start + EPOCH_DURATION
@@ -186,10 +251,6 @@ class EventsCog(commands.Cog):
             return
 
         try:
-            # Check if event_id is a valid integer
-            if not isinstance(event_id, int):
-                raise ValueError("Invalid event ID")
-
             event = await guild.fetch_scheduled_event(event_id)
             await event.edit(
                 name=name,
@@ -201,9 +262,9 @@ class EventsCog(commands.Cog):
             )
             if config.DEBUG_MODE:
                 print(f"Updated Discord event: {name}")
-        except (discord.NotFound, ValueError) as e:
+        except discord.NotFound:
             if config.DEBUG_MODE:
-                print(f"Event with ID {event_id} not found or invalid. Creating a new one.")
+                print(f"Event with ID {event_id} not found. Creating a new one.")
             new_event_id = await self.create_discord_event(name, description, start_time, end_time)
             if new_event_id:
                 self.store_event_data(name.split()[0].lower(), new_event_id, int(name.split()[1]) if name.split()[1].isdigit() else 0)
@@ -218,7 +279,7 @@ class EventsCog(commands.Cog):
             cursor.execute("SELECT event_id, associated_number FROM events WHERE event_type = ?", (event_type,))
             result = cursor.fetchone()
             conn.close()
-            if result and result[0] is not None:
+            if result:
                 return {'event_id': int(result[0]), 'associated_number': result[1]}
             return None
         except Exception as e:
@@ -227,11 +288,6 @@ class EventsCog(commands.Cog):
             return None
 
     def store_event_data(self, event_type, event_id, associated_number):
-        if event_id is None:
-            if config.DEBUG_MODE:
-                print(f"Attempted to store invalid event data: {event_type}, {event_id}, {associated_number}")
-            return
-        
         try:
             conn = sqlite3.connect('spacemesh_data.db')
             cursor = conn.cursor()
