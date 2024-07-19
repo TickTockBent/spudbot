@@ -65,12 +65,6 @@ class EventsCog(commands.Cog):
 
         next_epoch = current_epoch + 1
         next_epoch_start = self.calculate_epoch_start(next_epoch)
-        
-        # Ensure the event is always in the future
-        while next_epoch_start <= datetime.now(pytz.UTC):
-            next_epoch += 1
-            next_epoch_start = self.calculate_epoch_start(next_epoch)
-
         next_epoch_end = next_epoch_start + EPOCH_DURATION
         
         if config.DEBUG_MODE:
